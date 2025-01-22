@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create ENUMs
 CREATE TYPE ticket_status AS ENUM ('new', 'open', 'in_progress', 'pending', 'resolved', 'closed');
 CREATE TYPE ticket_priority AS ENUM ('low', 'medium', 'high', 'urgent');
-CREATE TYPE user_role AS ENUM ('customer', 'agent', 'admin');
+CREATE TYPE user_role AS ENUM ('customer', 'worker', 'admin');
 
 -- Create users table
 CREATE TABLE users (

@@ -3,9 +3,9 @@ INSERT INTO users (id, email, role, full_name, metadata) VALUES
   -- Admin
   ('d0d4671e-3b1d-4b39-b9a1-df62a6651a56', 'admin@autocrm.com', 'admin', 'Admin User', '{"department": "Management"}'),
 
-  -- Agents
-  ('8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'agent1@autocrm.com', 'agent', 'Alice Agent', '{"department": "Support", "specialty": "Technical"}'),
-  ('b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'agent2@autocrm.com', 'agent', 'Bob Agent', '{"department": "Support", "specialty": "Billing"}'),
+  -- Workers
+  ('8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'worker1@autocrm.com', 'worker', 'Alice Worker', '{"department": "Support", "specialty": "Technical"}'),
+  ('b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'worker2@autocrm.com', 'worker', 'Bob Worker', '{"department": "Support", "specialty": "Billing"}'),
 
   -- Customers
   ('e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', 'customer1@example.com', 'customer', 'Charlie Customer', '{"company": "TechCorp"}'),
