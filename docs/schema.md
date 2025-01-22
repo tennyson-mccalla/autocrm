@@ -17,7 +17,7 @@
 ### users
 - `id` UUID PRIMARY KEY DEFAULT uuid_generate_v4()
 - `email` TEXT UNIQUE NOT NULL
-- `role` ENUM ('customer', 'agent', 'admin') NOT NULL DEFAULT 'customer'
+- `role` ENUM ('customer', 'worker', 'admin') NOT NULL DEFAULT 'customer'
 - `full_name` TEXT
 - `metadata` JSONB  -- For additional user data
 - `created_at` TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -40,6 +40,6 @@
 
 ## Row Level Security (RLS) Policies
 - Customers can only view their own tickets
-- Agents can view all tickets but only modify assigned ones
+- Workers can view all tickets but only modify assigned ones
 - Admins have full access
-- Internal notes only visible to agents and admins
+- Internal notes only visible to workers and admins
