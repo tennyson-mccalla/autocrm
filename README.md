@@ -1,39 +1,23 @@
 # AutoCRM
 
-A secure, role-based customer relationship management system built with Next.js and Supabase.
+A modern customer relationship management system built with Next.js and Supabase.
 
 ## Features
 
-### Authentication & Authorization
-- Secure user authentication with email/password
-- Role-based access control (Customer, Worker, Admin)
-- JWT-based session management
-- Row Level Security (RLS) policies
-- Password strength requirements
-- Email format validation
+- 🎫 **Ticket Management**: Create and track support tickets
+- 👥 **Role-Based Access**: Different views for customers and workers
+- 🔒 **Secure Authentication**: Built-in authentication with Supabase
+- 📱 **Responsive Design**: Works on desktop and mobile devices
 
-### User Roles
-- **Customers**: Can create and view their own profiles
-- **Workers**: Can view customer profiles and handle support
-- **Admins**: Full access to all profiles and system features
+## Getting Started
 
-### Security Measures
-- Password strength validation
-  - Minimum 8 characters
-  - Must include uppercase, lowercase, numbers, and special characters
-  - Prevents common passwords and email-based passwords
-- Strict email validation
-- Role-based access control with JWT claims
-- Database-level security with RLS policies
-- Session management and secure logout
+### Prerequisites
 
-## Tech Stack
-- Next.js for the frontend
-- Supabase for authentication and database
-- TypeScript for type safety
-- Jest for testing
+- Node.js 16+
+- npm or yarn
+- Supabase account and project
 
-## Setup Instructions
+### Installation
 
 1. Clone the repository:
 ```bash
@@ -46,94 +30,106 @@ cd AutoCRM
 npm install
 ```
 
-3. Set up Supabase:
-- Create a new project at https://supabase.com
-- Copy your project URL and anon key
-- Create a `.env.local` file:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+Edit `.env.local` with your Supabase credentials:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. Start the development server:
+4. Run the development server:
 ```bash
 npm run dev
 ```
 
-## Demo Flow
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-1. Customer Journey:
-   - Sign up as a new customer
-   - View profile
-   - Update profile information
-   - Sign out
+### Running Tests
 
-2. Worker Journey:
-   - Sign in as a worker
-   - View customer profiles
-   - Access support features
-   - Sign out
-
-3. Admin Journey:
-   - Sign in as admin
-   - View all users
-   - Access admin features
-   - Sign out
-
-## Testing
-
-Run the test suite:
 ```bash
+# Run all tests
 npm test
-```
 
-The test suite includes:
-- Authentication tests
-- Access control tests
-- Input validation tests
-- Session management tests
+# Run specific test suites
+npm test tests/features/ticket-listing.test.tsx
+npm test tests/api/ticket-creation.test.ts
+```
 
 ## Project Structure
 
 ```
 AutoCRM/
-├── frontend/
-│   ├── src/
-│   │   ├── lib/
-│   │   │   └── auth.ts       # Authentication logic
-│   │   └── types/
-│   │       └── index.ts      # TypeScript types
-├── supabase/
-│   ├── migrations/           # Database migrations
-│   └── seed.sql             # Seed data
-└── tests/
-    ├── auth.test.ts         # Authentication tests
-    └── mocks/
-        └── supabase.ts      # Test mocks
+├── src/
+│   ├── components/    # React components
+│   ├── contexts/      # Context providers
+│   ├── lib/          # Utility functions and API
+│   └── pages/        # Next.js pages
+├── tests/
+│   ├── api/          # API tests
+│   ├── features/     # Feature tests
+│   └── mocks/        # Test mocks
+└── docs/            # Documentation
 ```
 
-## Security Considerations
+## Documentation
 
-1. **Authentication**:
-   - Secure password requirements
-   - Email validation
-   - Session management
+- [Ticket Creation & Customer Interface](docs/ticket_creation_customer_interface.md)
 
-2. **Authorization**:
-   - Role-based access control
-   - JWT claims for roles
-   - Row Level Security policies
+## Screenshots
 
-3. **Database Security**:
-   - Foreign key constraints
-   - RLS policies
-   - Audit logging
+### Ticket Creation Form
+![Ticket Creation Form](docs/images/ticket-creation-form.png)
+
+### Ticket Listing
+![Ticket Listing](docs/images/ticket-listing.png)
 
 ## Future Enhancements
 
-1. Password reset functionality
-2. Email verification
-3. Session refresh
-4. Rate limiting
-5. Account deletion
-6. Ticket system integration
+1. **Authentication Improvements**
+   - Password reset functionality
+   - Email verification
+   - Session refresh mechanism
+   - Rate limiting for auth endpoints
+
+2. **Ticket System Enhancements**
+   - File attachments for tickets
+   - Ticket categories/tags
+   - Ticket assignment to specific workers
+   - SLA tracking and notifications
+   - Ticket status change history
+
+3. **User Experience**
+   - Real-time updates for ticket status changes
+   - Email notifications for ticket updates
+   - Rich text editor for ticket descriptions
+   - Ticket search and advanced filtering
+   - Bulk actions for tickets
+
+4. **Admin Features**
+   - User management dashboard
+   - System-wide analytics
+   - Custom ticket fields configuration
+   - Role and permission management
+   - Audit logging
+
+5. **Integration Possibilities**
+   - Slack/Discord notifications
+   - Calendar integration for scheduling
+   - Knowledge base integration
+   - Customer satisfaction surveys
+   - Export functionality for reporting
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

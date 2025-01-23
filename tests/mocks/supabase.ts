@@ -1,193 +1,118 @@
+import { jest } from '@jest/globals'
+
 // @ts-nocheck
-let users = [];
-let tickets = [];
-let currentSession = null;
+class QueryBuilder {
+  private filters: Record<string, any> = {}
+  private orderByField?: string
+  private orderDirection?: 'asc' | 'desc'
+  private data: any[]
+  private error: any = null
 
-class PostgrestFilterBuilder {
-  constructor(data = [], table = 'users') {
-    this.data = data;
-    this.table = table;
-    this.filters = {};
-    this.updateData = null;
-    this.orderField = null;
-    this.orderDirection = null;
+  constructor(initialData: any[] = [], error: any = null) {
+    this.data = [...initialData]
+    this.error = error
   }
 
-  eq(field, value) {
-    this.filters[field] = value;
-    return this;
+  eq(field: string, value: any) {
+    this.filters[field] = value
+    return this
   }
 
-  order(field, { ascending = true } = {}) {
-    this.orderField = field;
-    this.orderDirection = ascending;
-    return this;
+  order(field: string, { ascending = true } = {}) {
+    this.orderByField = field
+    this.orderDirection = ascending ? 'asc' : 'desc'
+    return this
   }
 
-  select(columns = '*') {
-    if (!currentSession?.user && this.table !== 'auth') {
-      return { data: null, error: { message: 'Not authenticated' } };
-    }
-
-    let filtered = this.data.filter(item => {
-      return Object.entries(this.filters).every(([field, value]) => item[field] === value);
-    });
-
-    if (this.orderField) {
-      filtered.sort((a, b) => {
-        const aVal = a[this.orderField];
-        const bVal = b[this.orderField];
-        return this.orderDirection ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      });
-    }
-
-    return {
-      data: filtered,
-      error: null,
-      single: () => {
-        const item = filtered[0];
-        if (!item) {
-          return { data: null, error: { message: 'Record not found' } };
-        }
-        const { password, ...safeItem } = item;
-        return { data: safeItem, error: null };
+  select(_columns = '*') {
+    const builder = {
+      order: (field: string, options: any) => {
+        this.orderByField = field
+        this.orderDirection = options?.ascending ? 'asc' : 'desc'
+        return builder
       },
-      then: () => Promise.resolve({ data: filtered, error: null })
-    };
-  }
+      eq: (field: string, value: any) => {
+        this.filters[field] = value
+        return builder
+      },
+      then: (callback: any) => {
+        if (this.error) {
+          return callback({ data: null, error: this.error })
+        }
 
-  update(data) {
-    this.updateData = data;
-    return {
-      eq: (field, value) => {
-        this.filters[field] = value;
-        return {
-          select: () => {
-            if (!currentSession?.user) {
-              return { data: null, error: { message: 'Not authenticated' } };
-            }
+        const filtered = this.data.filter(item => {
+          return Object.entries(this.filters).every(([field, value]) => item[field] === value)
+        })
 
-            const filtered = this.data.filter(item => {
-              return Object.entries(this.filters).every(([field, value]) => item[field] === value);
-            });
+        if (this.orderByField) {
+          filtered.sort((a, b) => {
+            const aVal = a[this.orderByField!]
+            const bVal = b[this.orderByField!]
+            const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+            return this.orderDirection === 'asc' ? comparison : -comparison
+          })
+        }
 
-            if (filtered.length === 0) {
-              return { data: null, error: { message: 'Record not found' } };
-            }
-
-            const item = filtered[0];
-            const isAdmin = currentSession.user.user_metadata?.role === 'admin';
-            const isSelfUpdate = item.id === currentSession.user.id;
-
-            if (!isAdmin && !isSelfUpdate) {
-              return { data: null, error: { message: 'Unauthorized' } };
-            }
-
-            Object.assign(item, { ...this.updateData, updated_at: new Date().toISOString() });
-            return {
-              data: item,
-              error: null,
-              single: () => ({ data: item, error: null })
-            };
-          }
-        };
+        return callback({ data: filtered, error: null })
       }
-    };
-  }
-
-  insert(data) {
-    const id = `${this.table}-${Date.now()}`;
-    const record = {
-      id,
-      ...data,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    if (this.table === 'users') {
-      users.push(record);
-    } else if (this.table === 'tickets') {
-      tickets.push(record);
     }
 
+    return builder
+  }
+
+  single() {
+    return this.select().then(({ data, error }) => ({
+      data: data?.[0] || null,
+      error
+    }))
+  }
+
+  insert(records: any[]) {
+    const inserted = records.map(record => ({
+      id: `test-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...record
+    }))
+    this.data.push(...inserted)
     return {
       select: () => ({
-        single: () => ({ data: record, error: null })
+        single: () => Promise.resolve({ data: inserted[0], error: null })
       })
-    };
+    }
   }
 }
 
-const mockSupabaseClient = {
-  auth: {
-    signUp: jest.fn().mockImplementation(({ email, password, options }) => {
-      const existingUser = users.find(u => u.email === email);
-      if (existingUser) {
-        return { data: null, error: { message: 'User already exists' } };
-      }
+export const createMockSupabaseClient = (initialData = { users: [], tickets: [] }, error = null, user = null) => {
+  const mockSession = {
+    user,
+    access_token: 'mock-token',
+    refresh_token: 'mock-refresh-token'
+  }
 
-      const id = `user-${Date.now()}`;
-      const user = {
-        id,
-        email,
-        password,
-        role: options?.data?.role || 'customer',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      users.push(user);
-      currentSession = {
-        user: {
-          id: user.id,
-          email: user.email,
-          user_metadata: { role: user.role }
-        }
-      };
-
-      const { password: _, ...safeUser } = user;
-      return { data: { user: safeUser }, error: null };
-    }),
-
-    signInWithPassword: jest.fn().mockImplementation(({ email, password }) => {
-      const user = users.find(u => u.email === email && u.password === password);
-      if (!user) {
-        return { data: null, error: { message: 'Invalid login credentials' } };
-      }
-
-      currentSession = {
-        user: {
-          id: user.id,
-          email: user.email,
-          user_metadata: { role: user.role }
-        }
-      };
-
-      const { password: _, ...safeUser } = user;
-      return { data: { user: safeUser }, error: null };
-    }),
-
-    signOut: jest.fn().mockImplementation(() => {
-      currentSession = null;
-      return { error: null };
-    }),
-
-    getSession: jest.fn().mockImplementation(() => {
-      return { data: { session: currentSession }, error: null };
+  return {
+    auth: {
+      getSession: jest.fn().mockImplementation(() =>
+        Promise.resolve({ data: { session: mockSession }, error: null })
+      ),
+      getUser: jest.fn().mockImplementation(() =>
+        Promise.resolve({ data: { user: mockSession.user }, error: null })
+      ),
+      signOut: jest.fn().mockImplementation(() => {
+        mockSession.user = null
+        return Promise.resolve({ error: null })
+      })
+    },
+    // @ts-ignore - Jest mock typing issue
+    from: jest.fn().mockImplementation((table) => {
+      // @ts-ignore - Index access typing issue
+      return new QueryBuilder(initialData[table], error)
     })
-  },
+  }
+}
 
-  from: jest.fn().mockImplementation((table) => {
-    const data = table === 'users' ? users : tickets;
-    return new PostgrestFilterBuilder(data, table);
-  })
-};
+export const resetMockData = () => {
+  // Reset any stored data here if needed
+}
 
-export const resetMockSupabase = () => {
-  users = [];
-  tickets = [];
-  currentSession = null;
-  jest.clearAllMocks();
-};
-
-export default mockSupabaseClient;
+export default createMockSupabaseClient

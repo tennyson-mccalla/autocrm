@@ -18,9 +18,9 @@ function convertSupabaseUser(supabaseUser: any): User {
 export async function signUpUser(
   email: string,
   password: string,
-  role: UserRole,
+  role: string,
   client: SupabaseClient = createClient()
-): Promise<{ user: User | null; error: any }> {
+) {
   // Validate email
   const emailValidation = validateEmail(email);
   if (!emailValidation.valid) {
@@ -45,14 +45,14 @@ export async function signUpUser(
     return { user: null, error };
   }
 
-  return { user: data.user ? convertSupabaseUser(data.user) : null, error: null };
+  return { user: data.user, error: null };
 }
 
 export async function signInUser(
   email: string,
   password: string,
   client: SupabaseClient = createClient()
-): Promise<{ user: User | null; error: any }> {
+) {
   // Validate email
   const emailValidation = validateEmail(email);
   if (!emailValidation.valid) {
@@ -68,7 +68,7 @@ export async function signInUser(
     return { user: null, error };
   }
 
-  return { user: data.user ? convertSupabaseUser(data.user) : null, error: null };
+  return { user: data.user, error: null };
 }
 
 export async function signOutUser(
@@ -92,7 +92,7 @@ export async function getCurrentUser(
 export async function getUserProfile(
   userId: string,
   client: SupabaseClient = createClient()
-): Promise<{ user: User | null; error: any }> {
+) {
   if (!userId) {
     return { user: null, error: { message: 'User ID is required' } };
   }
@@ -121,12 +121,12 @@ export async function getUserProfile(
     return { user: null, error: { message: 'Unauthorized' } };
   }
 
-  return { user: convertSupabaseUser(user), error: null };
+  return { user, error: null };
 }
 
 export async function listAllUsers(
   client: SupabaseClient = createClient()
-): Promise<{ users: User[] | null; error: any }> {
+) {
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {
     return { users: null, error: sessionError || { message: 'Not authenticated' } };
@@ -147,7 +147,7 @@ export async function listAllUsers(
     return { users: null, error };
   }
 
-  return { users: users.map(convertSupabaseUser), error: null };
+  return { users, error: null };
 }
 
 export async function updateUserProfile(

@@ -1,79 +1,39 @@
 'use client';
-import { createClient } from '@supabase/supabase-js';
-import { useState, useEffect } from 'react';
 
-export default function Home() {
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+
+export default function HomePage() {
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    async function fetchTickets() {
-      try {
-        console.log('Fetching tickets...');
-        const { data, error } = await supabase
-          .from('tickets')
-          .select(`
-            *,
-            customer:users!tickets_created_by_fkey(full_name, email),
-            agent:users!tickets_assigned_to_fkey(full_name)
-          `);
-
-        console.log('Response:', { data, error });
-        if (error) throw error;
-        setTickets(data || []);
-      } catch (e) {
-        console.error('Detailed error:', e);
-        setError(e instanceof Error ? e.message : 'Failed to fetch tickets');
-      } finally {
-        setLoading(false);
-      }
+    if (user) {
+      router.push('/tickets');
     }
-
-    fetchTickets();
-  }, []);
+  }, [user, router]);
 
   return (
-    <div className="min-h-screen p-8">
-      <main>
-        <h1 className="text-3xl font-bold mb-8">AutoCRM Tickets</h1>
-
-        {loading && <p className="text-gray-600">Loading tickets...</p>}
-
-        {error && (
-          <p className="text-red-500">Error: {error}</p>
-        )}
-
-        {!loading && !error && tickets.length === 0 && (
-          <p className="text-gray-600">No tickets found</p>
-        )}
-
-        {!loading && !error && tickets.length > 0 && (
-          <div className="grid gap-4">
-            {tickets.map((ticket) => (
-              <div key={ticket.id} className="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h2 className="text-xl font-bold mb-2">{ticket.title}</h2>
-                <p className="text-gray-600 mb-4">{ticket.description}</p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p>Status: <span className="font-medium">{ticket.status}</span></p>
-                    <p>Priority: <span className="font-medium">{ticket.priority}</span></p>
-                  </div>
-                  <div>
-                    <p>Customer: <span className="font-medium">{ticket.customer?.full_name}</span></p>
-                    <p>Agent: <span className="font-medium">{ticket.agent?.full_name || 'Unassigned'}</span></p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h1 className="text-4xl font-extrabold text-center text-gray-900">
+            AutoCRM
+          </h1>
+          <p className="mt-3 text-center text-gray-600">
+            Customer Support Ticket Management System
+          </p>
+        </div>
+        <div className="mt-8 space-y-4">
+          <button
+            onClick={() => router.push('/auth/signin')}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

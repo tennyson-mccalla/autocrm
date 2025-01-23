@@ -1,34 +1,21 @@
-export function validateEmail(email: string): { valid: boolean; error?: string } {
+export function validateEmail(email: string) {
   if (!email) {
     return { valid: false, error: 'Email is required' };
   }
 
-  // Basic format check
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return { valid: false, error: 'Invalid email format' };
   }
 
-  // Length check
-  if (email.length > 254) {
+  if (email.length > 255) {
     return { valid: false, error: 'Email is too long' };
   }
 
-  // Local part checks
-  const [local] = email.split('@');
-  if (local.length > 64) {
-    return { valid: false, error: 'Local part of email is too long' };
-  }
-
-  // Check for dots at start/end
-  if (email.startsWith('.') || email.endsWith('.')) {
-    return { valid: false, error: 'Email cannot start or end with a dot' };
-  }
-
-  return { valid: true };
+  return { valid: true, error: null };
 }
 
-export function validatePassword(password: string): { valid: boolean; error?: string } {
+export function validatePassword(password: string) {
   if (!password) {
     return { valid: false, error: 'Password is required' };
   }
@@ -41,21 +28,17 @@ export function validatePassword(password: string): { valid: boolean; error?: st
     return { valid: false, error: 'Password is too long' };
   }
 
-  if (!/[A-Z]/.test(password)) {
-    return { valid: false, error: 'Password must contain at least one uppercase letter' };
+  // Require at least one lowercase letter, one uppercase letter, and one number
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+
+  if (!hasLowerCase || !hasUpperCase || !hasNumber) {
+    return {
+      valid: false,
+      error: 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
+    };
   }
 
-  if (!/[a-z]/.test(password)) {
-    return { valid: false, error: 'Password must contain at least one lowercase letter' };
-  }
-
-  if (!/[0-9]/.test(password)) {
-    return { valid: false, error: 'Password must contain at least one number' };
-  }
-
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    return { valid: false, error: 'Password must contain at least one special character' };
-  }
-
-  return { valid: true };
+  return { valid: true, error: null };
 }

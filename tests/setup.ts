@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { jest } from '@jest/globals';
-import mockSupabaseClient, { resetMockSupabase } from './mocks/supabase';
+import { createMockSupabaseClient, resetMockData } from './mocks/supabase';
+import '@testing-library/jest-dom'
 
 // Load environment variables from .env.test if it exists, otherwise from .env
 config({ path: '.env.test' });
@@ -12,13 +13,16 @@ jest.setTimeout(10000);
 // Mock console.error to keep test output clean
 console.error = jest.fn();
 
+// Create a default mock client for tests
+const mockSupabaseClient = createMockSupabaseClient();
+
 // Mock the createClient function
 jest.mock('../frontend/src/lib/supabase', () => ({
   createClient: () => mockSupabaseClient
 }));
 
 beforeEach(() => {
-  resetMockSupabase();
+  resetMockData();
 });
 
 export { mockSupabaseClient };
