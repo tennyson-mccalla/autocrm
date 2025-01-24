@@ -146,17 +146,16 @@ export async function assignTicket(ticketId: string, assignedTo: string) {
 }
 
 export async function getWorkers() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const client = createSupabaseClient();
+  const { data, error } = await client
+    .from('profiles')
+    .select('*')
+    .eq('role', 'worker');
 
-  const { data, error } = await supabase
-    .from('users')
-    .select('id, email')
-    .eq('raw_user_meta_data->role', 'worker');
+  if (error) {
+    throw error;
+  }
 
-  if (error) throw error;
   return data;
 }
 
