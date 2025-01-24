@@ -71,11 +71,10 @@ export async function getTicketsInQueue(queueId: string) {
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
-      ticket_id,
-      ticket:tickets(*)
+      tickets!inner(*)
     `)
     .eq('queue_id', queueId);
 
   if (error) throw error;
-  return data?.map(d => d.ticket);
+  return data?.map(d => d.tickets) || [];
 }
