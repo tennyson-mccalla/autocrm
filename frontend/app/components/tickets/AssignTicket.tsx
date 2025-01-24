@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { assignTicket, getWorkers } from '@/lib/tickets';
+import { useAuth } from '../../contexts/AuthContext';
+import { assignTicket, getWorkers } from '../../lib/tickets';
 
 interface Worker {
   id: string;

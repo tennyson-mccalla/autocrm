@@ -1,9 +1,11 @@
 'use client';
 
-import { useAuth } from '../contexts/AuthContext';
-import LoginForm from '../components/auth/LoginForm';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from './contexts/AuthContext';
+import LoginForm from './components/auth/LoginForm';
 import Link from 'next/link';
-import { TicketList } from '../components/tickets/TicketList';
+import { TicketList } from './components/tickets/TicketList';
 
 export default function Home() {
   const { user, loading, signOut } = useAuth();
