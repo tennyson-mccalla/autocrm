@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { NewTicketForm } from '@/components/tickets/NewTicketForm'
+import NewTicketForm from '../../components/tickets/NewTicketForm';
 
 export default function NewTicketPage() {
   const router = useRouter();

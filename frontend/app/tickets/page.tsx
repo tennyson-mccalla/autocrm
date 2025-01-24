@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link'
-import { TicketList } from '@/components/tickets/TicketList'
-import Navigation from '@/components/Navigation';
+import { TicketList } from '../components/tickets/TicketList';
+import Navigation from '../components/Navigation';
 
 export default function TicketsPage() {
   return (

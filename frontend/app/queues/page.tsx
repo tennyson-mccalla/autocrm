@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Queue, createQueue, getQueues, getTicketsInQueue } from '@/lib/queues';
-import { Ticket } from '@/lib/tickets';
-import Navigation from '@/components/Navigation';
+import { Queue, createQueue, getQueues, getTicketsInQueue } from '../lib/queues';
+import { Ticket } from '../lib/tickets';
+import Navigation from '../components/Navigation';
 
 export default function QueuesPage() {
   const [queues, setQueues] = useState<Queue[]>([]);
