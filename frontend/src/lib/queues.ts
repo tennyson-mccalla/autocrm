@@ -83,8 +83,9 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
         updated_at
       )
     `)
-    .eq('queue_id', queueId);
+    .eq('queue_id', queueId)
+    .returns<{ tickets: Ticket }[]>();
 
   if (error) throw error;
-  return (data?.map(d => d.tickets) || []) as Ticket[];
+  return data?.map(d => d.tickets) || [];
 }
