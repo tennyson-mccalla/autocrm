@@ -9,7 +9,7 @@ export function NewTicketForm() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium' as const
+    priority: 'medium' as 'low' | 'medium' | 'high'
   })
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
