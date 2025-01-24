@@ -131,18 +131,17 @@ export async function getUnassignedTickets() {
 }
 
 export async function assignTicket(ticketId: string, assignedTo: string) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const client = createSupabaseClient();
+  const { data, error } = await client
+    .from('tickets')
+    .update({ assigned_to: assignedTo })
+    .eq('id', ticketId)
+    .select();
 
-  const { data, error } = await supabase
-    .rpc('assign_ticket', {
-      _ticket_id: ticketId,
-      _assigned_to: assignedTo
-    });
+  if (error) {
+    throw error;
+  }
 
-  if (error) throw error;
   return data;
 }
 
