@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { Database } from './database.types';
+import { Database } from '../types/supabase';
 import { Ticket } from './tickets';
 
 const supabase = createBrowserClient(
