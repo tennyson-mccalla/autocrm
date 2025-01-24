@@ -1,5 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from './database.types';
+import { Ticket } from './tickets';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,7 +68,7 @@ export async function getQueueAssignments(ticketId: string) {
   return data;
 }
 
-export async function getTicketsInQueue(queueId: string) {
+export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
@@ -76,5 +77,5 @@ export async function getTicketsInQueue(queueId: string) {
     .eq('queue_id', queueId);
 
   if (error) throw error;
-  return data?.map(d => d.tickets) || [];
+  return (data?.map(d => d.tickets) as Ticket[]) || [];
 }
