@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getQueues, Queue } from '../../lib/queues';
+import { getQueues, Queue, getQueueAssignments, assignTicketToQueue } from '../../lib/queues';
 
 export default function QueueSelector({ ticketId }: { ticketId: string }) {
   const [queues, setQueues] = useState<Queue[]>([]);
