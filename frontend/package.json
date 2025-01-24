@@ -2,6 +2,7 @@
   "name": "autocrm-frontend",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +12,7 @@
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.48.0",
+    "@supabase/supabase-js": "^2.48.1",
     "dotenv": "^16.4.7",
     "next": "^14.0.4",
     "react": "^18.2.0",
