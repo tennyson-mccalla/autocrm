@@ -25,25 +25,31 @@ export interface PaginatedResponse<T> {
   error: any;
 }
 
-export async function createTicket(ticket: NewTicket) {
+export type TicketInput = Pick<Ticket, 'title' | 'description' | 'priority'>;
+
+export async function createTicket(ticket: TicketInput): Promise<{ data: Ticket | null; error: { message: string } | null }> {
   const client = createSupabaseClient();
   const { data: { session }, error: sessionError } = await client.auth.getSession();
 
   if (sessionError || !session) {
-    return { error: { message: 'Not authenticated' } };
+    return { data: null, error: { message: 'Not authenticated' } };
   }
 
   const { data, error } = await client
     .from('tickets')
-    .insert([{ ...ticket, created_by: session.user.id }])
+    .insert([{
+      ...ticket,
+      created_by: session.user.id,
+      status: 'open' as const
+    }])
     .select()
     .single();
 
   if (error) {
-    return { error: { message: error.message } };
+    return { data: null, error: { message: error.message } };
   }
 
-  return { data };
+  return { data, error: null };
 }
 
 export async function listTickets() {

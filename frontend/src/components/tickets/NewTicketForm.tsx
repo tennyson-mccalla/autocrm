@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { createTicket } from '@/lib/tickets'
+import { createTicket, TicketInput } from '@/lib/tickets'
 
 export function NewTicketForm() {
   const { user } = useAuth()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TicketInput>({
     title: '',
     description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high'
+    priority: 'medium'
   })
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -50,7 +50,7 @@ export function NewTicketForm() {
     }
 
     try {
-      const { error } = await createTicket(formData)
+      const { data, error } = await createTicket(formData)
       if (error) {
         setError(error.message)
       } else {
@@ -63,7 +63,7 @@ export function NewTicketForm() {
         })
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setIsSubmitting(false)
     }
@@ -112,7 +112,7 @@ export function NewTicketForm() {
         <select
           id="priority"
           value={formData.priority}
-          onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
+          onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         >
           <option value="low">Low</option>
