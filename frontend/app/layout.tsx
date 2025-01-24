@@ -1,10 +1,10 @@
 import './globals.css';
-import { Providers } from '../components/Providers';
+import { Providers } from './components/Providers';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'AutoCRM',
-  description: 'Customer Relationship Management System',
+  description: 'Automated Customer Relationship Management',
 };
 
 export default function RootLayout({
@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-gray-50">
-      <body className="h-full">
+    <html lang="en">
+      <body>
         <Providers>
           {children}
         </Providers>

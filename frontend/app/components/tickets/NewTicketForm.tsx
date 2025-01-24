@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { createTicket, TicketInput } from '@/lib/tickets'
+import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { createTicket, TicketInput } from '../../lib/tickets';
 
 export function NewTicketForm() {
   const { user } = useAuth()
