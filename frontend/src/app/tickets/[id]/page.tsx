@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTicket, Ticket } from '../../../lib/tickets';
-import QueueSelector from '@/components/tickets/QueueSelector';
-import Navigation from '@/components/Navigation';
-import AssignTicket from '@/components/tickets/AssignTicket';
+import QueueSelector from '../../../components/tickets/QueueSelector';
+import Navigation from '../../../components/Navigation';
+import AssignTicket from '../../../components/tickets/AssignTicket';
 
 export default function TicketPage({ params }: { params: { id: string } }) {
   const router = useRouter();
