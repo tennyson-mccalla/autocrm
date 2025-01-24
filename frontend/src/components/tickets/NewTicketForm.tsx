@@ -3,19 +3,21 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createTicket } from '@/lib/tickets'
-import { useRouter } from 'next/navigation'
 
 export function NewTicketForm() {
-  const router = useRouter()
   const { user } = useAuth()
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high'
+    priority: 'medium' as const
   })
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<{
+    title?: string;
+    description?: string;
+  }>({})
 
   if (!user) {
     return (
@@ -25,35 +27,26 @@ export function NewTicketForm() {
     )
   }
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      priority: 'medium'
-    })
-    setError(null)
-  }
-
-  const handleCreateAnother = () => {
-    setIsSuccess(false)
-    resetForm()
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setSuccess(false)
     setIsSubmitting(true)
+    setValidationErrors({})
 
     // Validate required fields
+    const errors: typeof validationErrors = {};
     if (!formData.title.trim()) {
-      setError('Title is required')
-      setIsSubmitting(false)
-      return
+      errors.title = 'Title is required';
     }
     if (!formData.description.trim()) {
-      setError('Description is required')
-      setIsSubmitting(false)
-      return
+      errors.description = 'Description is required';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setIsSubmitting(false);
+      return;
     }
 
     try {
@@ -61,51 +54,19 @@ export function NewTicketForm() {
       if (error) {
         setError(error.message)
       } else {
-        // First clear the form
-        resetForm()
-        // Then show success state
-        setIsSuccess(true)
+        setSuccess(true)
+        // Reset form on success
+        setFormData({
+          title: '',
+          description: '',
+          priority: 'medium'
+        })
       }
     } catch (err) {
       setError('An unexpected error occurred')
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  if (isSuccess) {
-    return (
-      <div className="max-w-2xl mx-auto p-4 text-center space-y-4">
-        <div className="rounded-md bg-green-50 p-4">
-          <div className="flex justify-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">
-                Ticket created successfully!
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="space-x-4">
-          <button
-            onClick={handleCreateAnother}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Create Another Ticket
-          </button>
-          <button
-            onClick={() => router.push('/tickets')}
-            className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            View All Tickets
-          </button>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -122,6 +83,9 @@ export function NewTicketForm() {
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           placeholder="Brief description of the issue"
         />
+        {validationErrors.title && (
+          <p className="mt-1 text-sm text-red-600">{validationErrors.title}</p>
+        )}
       </div>
 
       <div>
@@ -136,6 +100,9 @@ export function NewTicketForm() {
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           placeholder="Detailed explanation of your issue"
         />
+        {validationErrors.description && (
+          <p className="mt-1 text-sm text-red-600">{validationErrors.description}</p>
+        )}
       </div>
 
       <div>
@@ -155,9 +122,11 @@ export function NewTicketForm() {
       </div>
 
       {error && (
-        <div className="text-red-600 text-sm">
-          {error}
-        </div>
+        <div className="text-red-600 text-sm">{error}</div>
+      )}
+
+      {success && (
+        <div className="text-green-600 text-sm">Ticket created successfully!</div>
       )}
 
       <button

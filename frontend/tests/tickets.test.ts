@@ -3,15 +3,14 @@ import {
   createTicket,
   listTickets,
   updateTicketStatus,
-  assignTicket,
-  getUnassignedTickets
-} from '../frontend/src/lib/tickets';
-import { signUpUser, signInUser } from '../frontend/src/lib/auth';
-import { mockSupabaseClient, resetMockSupabase } from './mocks/supabase';
+  getUserTickets
+} from '../src/lib/tickets';
+import { signUpUser, signInUser } from '../src/lib/auth';
+import { mockSupabaseClient, resetMockStore } from './mocks/supabase';
 
 describe('Ticket Service', () => {
   beforeEach(() => {
-    resetMockSupabase();
+    resetMockStore();
   });
 
   describe('Create Ticket', () => {

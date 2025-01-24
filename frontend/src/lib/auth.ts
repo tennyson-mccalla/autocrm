@@ -1,38 +1,26 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { createClient } from './supabase';
-import { validateEmail, validatePassword } from './validation';
-import type { User, UserRole } from '../types';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '../types/supabase';
 
-function convertSupabaseUser(supabaseUser: any): User {
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || '',
-    role: (supabaseUser.user_metadata?.role || 'customer') as UserRole,
-    full_name: supabaseUser.user_metadata?.full_name,
-    metadata: supabaseUser.user_metadata?.metadata,
-    created_at: supabaseUser.created_at,
-    updated_at: supabaseUser.updated_at
-  };
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+let supabaseClient: ReturnType<typeof createClient<Database>>;
+
+export function createSupabaseClient() {
+  if (!supabaseClient) {
+    supabaseClient = createClient<Database>(supabaseUrl, supabaseKey);
+  }
+  return supabaseClient;
 }
+
+type UserRole = 'admin' | 'worker' | 'customer';
 
 export async function signUpUser(
   email: string,
   password: string,
-  role: string,
-  client: SupabaseClient = createClient()
+  role: UserRole,
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
-  // Validate email
-  const emailValidation = validateEmail(email);
-  if (!emailValidation.valid) {
-    return { user: null, error: { message: emailValidation.error } };
-  }
-
-  // Validate password
-  const passwordValidation = validatePassword(password);
-  if (!passwordValidation.valid) {
-    return { user: null, error: { message: passwordValidation.error } };
-  }
-
   const { data, error } = await client.auth.signUp({
     email,
     password,
@@ -51,14 +39,8 @@ export async function signUpUser(
 export async function signInUser(
   email: string,
   password: string,
-  client: SupabaseClient = createClient()
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
-  // Validate email
-  const emailValidation = validateEmail(email);
-  if (!emailValidation.valid) {
-    return { user: null, error: { message: emailValidation.error } };
-  }
-
   const { data, error } = await client.auth.signInWithPassword({
     email,
     password
@@ -72,26 +54,27 @@ export async function signInUser(
 }
 
 export async function signOutUser(
-  client: SupabaseClient = createClient()
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
   const { error } = await client.auth.signOut();
   return { error };
 }
 
 export async function getCurrentUser(
-  client: SupabaseClient = createClient()
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
   const { data: { session }, error } = await client.auth.getSession();
+  
   if (error || !session) {
     return { user: null, error: error || { message: 'No session found' } };
   }
-
+  
   return { user: session.user, error: null };
 }
 
 export async function getUserProfile(
   userId: string,
-  client: SupabaseClient = createClient()
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
   if (!userId) {
     return { user: null, error: { message: 'User ID is required' } };
@@ -125,16 +108,14 @@ export async function getUserProfile(
 }
 
 export async function listAllUsers(
-  client: SupabaseClient = createClient()
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {
-    return { users: null, error: sessionError || { message: 'Not authenticated' } };
+    return { users: null, error: sessionError || { message: 'No session found' } };
   }
 
-  const userRole = session.user.user_metadata.role;
-
-  if (userRole !== 'admin') {
+  if (session.user.user_metadata?.role !== 'admin') {
     return { users: null, error: { message: 'Unauthorized' } };
   }
 
@@ -156,45 +137,39 @@ export async function updateUserProfile(
     full_name?: string;
     metadata?: Record<string, any>;
   },
-  client: SupabaseClient = createClient()
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
-  // Check authentication
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {
-    return { user: null, error: sessionError || { message: 'Not authenticated' } };
+    return { user: null, error: sessionError || { message: 'No session found' } };
   }
 
-  // Only allow users to update their own profile unless they're an admin
-  const userRole = session.user.user_metadata.role;
-  if (userRole !== 'admin' && userId !== session.user.id) {
+  const currentUser = session.user;
+  const isAdmin = currentUser.user_metadata?.role === 'admin';
+  const isOwnProfile = currentUser.id === userId;
+
+  if (!isAdmin && !isOwnProfile) {
     return { user: null, error: { message: 'Unauthorized' } };
   }
 
-  // Validate full_name if provided
-  if (updates.full_name !== undefined && updates.full_name.length > 100) {
+  // Validate full name length
+  if (updates.full_name && updates.full_name.length > 100) {
     return { user: null, error: { message: 'Full name is too long' } };
   }
 
-  // Validate metadata if provided
-  if (updates.metadata !== undefined) {
+  // Validate metadata
+  if (updates.metadata) {
     try {
       JSON.stringify(updates.metadata);
-    } catch (e) {
+    } catch (err) {
       return { user: null, error: { message: 'Invalid metadata format' } };
     }
   }
 
-  // Add updated_at timestamp
-  const updateData = {
-    ...updates,
-    updated_at: new Date().toISOString()
-  };
-
   const { data: user, error } = await client
     .from('users')
-    .update(updateData)
+    .update(updates)
     .eq('id', userId)
-    .select()
     .single();
 
   if (error) {
@@ -207,69 +182,39 @@ export async function updateUserProfile(
 export async function updateUserRole(
   userId: string,
   newRole: UserRole,
-  client: SupabaseClient = createClient()
+  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
 ) {
-  // Check authentication
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {
-    return { user: null, error: sessionError || { message: 'Not authenticated' } };
+    return { user: null, error: sessionError || { message: 'No session found' } };
   }
 
-  // Only admins can change roles
-  const userRole = session.user.user_metadata.role;
-  if (userRole !== 'admin') {
-    return { user: null, error: { message: 'Only admins can modify roles' } };
+  if (session.user.user_metadata?.role !== 'admin') {
+    return { user: null, error: { message: 'Only admins can change user roles' } };
   }
 
-  // Validate the new role
-  const validRoles: UserRole[] = ['customer', 'worker', 'admin'];
-  if (!validRoles.includes(newRole)) {
+  if (!['admin', 'worker', 'customer'].includes(newRole)) {
     return { user: null, error: { message: 'Invalid role' } };
   }
 
-  // Get current user data to check if it exists
-  const { data: currentUser, error: fetchError } = await client
+  const { data: user, error } = await client
     .from('users')
-    .select('role')
+    .update({ role: newRole })
     .eq('id', userId)
     .single();
 
-  if (fetchError || !currentUser) {
-    return { user: null, error: fetchError || { message: 'User not found' } };
+  if (error) {
+    return { user: null, error };
   }
 
-  // Update both the users table and auth metadata
-  const { data: user, error: updateError } = await client
-    .from('users')
-    .update({
-      role: newRole,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (updateError) {
-    return { user: null, error: updateError };
-  }
-
-  // Update auth metadata to keep it in sync
-  const { error: metadataError } = await client.auth.admin.updateUserById(
+  // Update auth metadata
+  const { error: authError } = await client.auth.admin.updateUserById(
     userId,
     { user_metadata: { role: newRole } }
   );
 
-  if (metadataError) {
-    // If metadata update fails, revert the role change
-    await client
-      .from('users')
-      .update({
-        role: currentUser.role,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId);
-
-    return { user: null, error: metadataError };
+  if (authError) {
+    return { user: null, error: authError };
   }
 
   return { user, error: null };

@@ -1,36 +1,37 @@
-'use client';
-
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '../types';
-import { getCurrentUser, signInUser, signOutUser, signUpUser } from '../lib/auth';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { SupabaseClient, User } from '@supabase/supabase-js';
 import { createClient } from '../lib/supabase';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  error: Error | null;
+  error: string | null;
+  signUp: (email: string, password: string, role?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode; client?: SupabaseClient }> = ({
+  children,
+  client = createClient()
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const supabase = createClient();
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    // Check active session
     const checkUser = async () => {
       try {
-        const { user: currentUser, error } = await getCurrentUser(supabase);
-        if (error) throw error;
-        setUser(currentUser as User | null);
-      } catch (e) {
-        setError(e as Error);
+        const { data: { session }, error: sessionError } = await client.auth.getSession();
+        if (sessionError) throw sessionError;
+        setUser(session?.user ?? null);
+      } catch (err) {
+        console.error('Error checking auth state:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
@@ -38,72 +39,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkUser();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const { user: currentUser, error } = await getCurrentUser(supabase);
-        if (!error && currentUser) {
-          setUser(currentUser as User);
-        }
-      } else {
-        setUser(null);
-      }
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
       setLoading(false);
+      if (!session) {
+        router.push('/');
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [client, router]);
 
-  const signIn = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, role: string = 'customer') => {
     try {
-      const { user: signedInUser, error } = await signInUser(email, password, supabase);
+      const { error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { role }
+        }
+      });
       if (error) throw error;
-      if (signedInUser) {
-        setUser(signedInUser as User);
-      }
-    } catch (e) {
-      setError(e as Error);
-      throw e;
+    } catch (err) {
+      console.error('Error signing up:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during signup');
+      throw err;
     }
   };
 
-  const signUp = async (email: string, password: string, role: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const { user: newUser, error } = await signUpUser(email, password, role, supabase);
+      const { error } = await client.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      if (newUser) {
-        setUser(newUser as User);
-      }
-    } catch (e) {
-      setError(e as Error);
-      throw e;
+      router.push('/tickets');
+    } catch (err) {
+      console.error('Error signing in:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during sign in');
+      throw err;
     }
   };
 
   const signOut = async () => {
     try {
-      const { error } = await signOutUser(supabase);
-      if (error) throw error;
-      setUser(null);
-    } catch (e) {
-      setError(e as Error);
-      throw e;
+      await client.auth.signOut();
+      router.push('/');
+    } catch (err) {
+      console.error('Error signing out:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during sign out');
+      throw err;
     }
   };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  const value = {
+    user,
+    loading,
+    error,
+    signUp,
+    signIn,
+    signOut
+  };
 
-export function useAuth() {
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};

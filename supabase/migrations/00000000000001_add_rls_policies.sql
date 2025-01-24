@@ -49,6 +49,10 @@ CREATE POLICY "Workers can read all tickets"
     ON tickets FOR SELECT
     USING (check_user_role('worker'::user_role));
 
+CREATE POLICY "Admins have full access to tickets"
+    ON tickets FOR ALL
+    USING (check_user_role('admin'::user_role));
+
 CREATE POLICY "Workers can update assigned tickets"
     ON tickets FOR UPDATE
     USING (

@@ -1,37 +1,60 @@
 'use client';
 
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { getUserTickets, type Ticket } from '@/lib/tickets'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
+import { listTickets, Ticket } from '../../lib/tickets';
+import { Pagination } from '../common/Pagination';
 
 export function TicketList() {
-  const { user } = useAuth()
-  const [tickets, setTickets] = useState<Ticket[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    async function loadTickets() {
-      if (!user) return
+    async function fetchTickets() {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const { data, error } = await getUserTickets()
-      if (error) {
-        setError(error.message)
-      } else {
-        setTickets(data || [])
+        if (!user) {
+          setError('Please sign in to view tickets');
+          return;
+        }
+
+        const { data, error: ticketError } = await listTickets();
+        
+        if (ticketError) {
+          setError(ticketError.message);
+          return;
+        }
+
+        setTickets(data || []);
+      } catch (err) {
+        setError('Error loading tickets');
+        console.error('Error loading tickets:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false)
     }
 
-    loadTickets()
-  }, [user])
+    fetchTickets();
+  }, [user]);
+
+  const handleTicketClick = (ticketId: string) => {
+    router.push(`/tickets/${ticketId}`);
+  };
 
   if (!user) {
     return (
       <div className="p-4 text-center">
-        <p className="text-gray-600">Please sign in to view your tickets</p>
+        <p className="text-gray-600">Please sign in to view tickets</p>
       </div>
-    )
+    );
   }
 
   if (loading) {
@@ -39,7 +62,7 @@ export function TicketList() {
       <div className="p-4 text-center">
         <p className="text-gray-600">Loading tickets...</p>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -47,29 +70,35 @@ export function TicketList() {
       <div className="p-4 text-center">
         <p className="text-red-600">{error}</p>
       </div>
-    )
+    );
   }
 
-  if (tickets.length === 0) {
+  if (!tickets.length) {
     return (
       <div className="p-4 text-center">
         <p className="text-gray-600">No tickets found</p>
       </div>
-    )
+    );
   }
+
+  // Calculate pagination
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTickets = tickets.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-4">
-      {tickets.map((ticket) => (
+      {paginatedTickets.map((ticket) => (
         <div
           key={ticket.id}
-          className="bg-white shadow rounded-lg p-4 border border-gray-200"
+          onClick={() => handleTicketClick(ticket.id)}
+          className="bg-white shadow rounded-lg p-4 border border-gray-200 hover:border-indigo-300 transition-colors cursor-pointer"
         >
           <div className="flex justify-between items-start">
             <h3 className="text-lg font-medium">{ticket.title}</h3>
             <span className={`px-2 py-1 rounded text-sm ${
-              ticket.status === 'open' ? 'bg-blue-100 text-blue-800' :
-              ticket.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+              ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' :
+              ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
               'bg-green-100 text-green-800'
             }`}>
               {ticket.status}
@@ -91,6 +120,13 @@ export function TicketList() {
           </div>
         </div>
       ))}
+      
+      <Pagination
+        currentPage={currentPage}
+        totalItems={tickets.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
-  )
+  );
 }

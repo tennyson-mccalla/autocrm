@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Load env from frontend directory
+dotenv.config({ path: path.resolve(__dirname, '../frontend/.env.local') });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

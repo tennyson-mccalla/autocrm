@@ -1,14 +1,13 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '../types/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+let client: ReturnType<typeof createSupabaseClient<Database>> | null = null;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+export const createClient = () => {
+  if (client) return client;
 
-// Create a single instance
-const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey);
-
-// Export the singleton instance
-export const createClient = () => supabase;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  client = createSupabaseClient<Database>(supabaseUrl, supabaseKey);
+  return client;
+};

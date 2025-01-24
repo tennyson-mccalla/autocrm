@@ -1,39 +1,75 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext';
+import LoginForm from '../components/auth/LoginForm';
+import Link from 'next/link';
+import { TicketList } from '../components/tickets/TicketList';
 
-export default function HomePage() {
-  const { user } = useAuth();
-  const router = useRouter();
+export default function Home() {
+  const { user, loading, signOut } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      router.push('/tickets');
-    }
-  }, [user, router]);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h1 className="text-4xl font-extrabold text-center text-gray-900">
-            AutoCRM
-          </h1>
-          <p className="mt-3 text-center text-gray-600">
-            Customer Support Ticket Management System
-          </p>
+    <main className="min-h-screen">
+      <nav className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <h1 className="text-2xl font-bold text-gray-900">AutoCRM</h1>
+              </div>
+              {user && (
+                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                  <Link
+                    href="/tickets"
+                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  >
+                    Tickets
+                  </Link>
+                </div>
+              )}
+            </div>
+            {user && (
+              <div className="flex items-center">
+                <span className="text-gray-700 mr-4">Welcome, {user.email}</span>
+                <button
+                  onClick={() => signOut()}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="mt-8 space-y-4">
-          <button
-            onClick={() => router.push('/auth/signin')}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Get Started
-          </button>
-        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {user ? (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
+              <Link
+                href="/tickets/new"
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Create New Ticket
+              </Link>
+            </div>
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Tickets</h3>
+              <TicketList />
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-md mx-auto">
+            <LoginForm />
+          </div>
+        )}
       </div>
-    </div>
+    </main>
   );
 }

@@ -1,19 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import path from 'path';
 
-// Load the correct .env file
-dotenv.config({ path: '.env.local' });
+// Load env from frontend directory
+dotenv.config({ path: path.resolve(__dirname, '../frontend/.env.local') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase environment variables');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const TEST_USERS = [
   {
@@ -47,26 +42,25 @@ async function createTestUsers() {
 
     if (error) {
       console.error(`Error creating user ${user.email}:`, error.message);
-      continue;
-    }
-
-    console.log(`Successfully created user: ${user.email}`);
-
-    // Create user profile in users table
-    const { error: profileError } = await supabase
-      .from('users')
-      .insert({
-        id: data.user!.id,
-        email: user.email,
-        role: user.role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-
-    if (profileError) {
-      console.error(`Error creating profile for ${user.email}:`, profileError.message);
     } else {
-      console.log(`Successfully created profile for: ${user.email}`);
+      console.log(`Successfully created user: ${user.email}`);
+
+      // Create user profile in users table
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user!.id,
+          email: user.email,
+          role: user.role,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (profileError) {
+        console.error(`Error creating profile for ${user.email}:`, profileError.message);
+      } else {
+        console.log(`Successfully created profile for: ${user.email}`);
+      }
     }
   }
 }
