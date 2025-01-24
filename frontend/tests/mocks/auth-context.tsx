@@ -1,11 +1,19 @@
 import React from 'react';
 import { AuthContext } from '../../src/contexts/AuthContext';
+import { User } from '@supabase/supabase-js';
 
 export const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const mockUser = {
+  const mockUser: User = {
     id: 'test-user-id',
     email: 'test@example.com',
-    user_metadata: { role: 'customer' }
+    user_metadata: { role: 'customer' },
+    app_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    role: 'authenticated',
+    updated_at: new Date().toISOString(),
   };
 
   const mockAuthContext = {
