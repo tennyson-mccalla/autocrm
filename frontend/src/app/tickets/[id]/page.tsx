@@ -6,20 +6,25 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { getTicket, Ticket } from '../../../lib/tickets';
 import QueueSelector from '@/components/tickets/QueueSelector';
 import Navigation from '@/components/Navigation';
+import AssignTicket from '@/components/tickets/AssignTicket';
 
 export default function TicketPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTicket() {
       try {
         const ticketData = await getTicket(params.id);
         setTicket(ticketData);
+        setError(null);
       } catch (error) {
         console.error('Error fetching ticket:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load ticket');
+        setTicket(null);
       } finally {
         setLoading(false);
       }
@@ -36,6 +41,10 @@ export default function TicketPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
   }
 
   if (!ticket) {
@@ -70,6 +79,7 @@ export default function TicketPage({ params }: { params: { id: string } }) {
           </div>
 
           <QueueSelector ticketId={ticket.id} />
+          <AssignTicket ticketId={ticket.id} />
 
           <div className="bg-white shadow rounded-lg p-6 mt-4">
             <div>

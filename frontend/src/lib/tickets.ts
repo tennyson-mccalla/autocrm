@@ -124,50 +124,43 @@ export async function getUnassignedTickets() {
   return { data };
 }
 
-export async function assignTicket(ticketId: number, workerId: string) {
-  const client = createSupabaseClient();
-  const { data: { session }, error: sessionError } = await client.auth.getSession();
+export async function assignTicket(ticketId: string, assignedTo: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
-  if (sessionError || !session) {
-    return { error: { message: 'Not authenticated' } };
-  }
+  const { data, error } = await supabase
+    .rpc('assign_ticket', {
+      _ticket_id: ticketId,
+      _assigned_to: assignedTo
+    });
 
-  const userRole = session.user.user_metadata.role;
-  if (userRole === 'customer') {
-    return { error: { message: 'Unauthorized' } };
-  }
-
-  // Verify the worker exists and has the correct role
-  const { data: workerData, error: workerError } = await client
-    .from('users')
-    .select('role')
-    .eq('id', workerId)
-    .single();
-
-  if (workerError || !workerData || workerData.role !== 'worker') {
-    return { error: { message: 'Invalid worker ID' } };
-  }
-
-  const { data, error } = await client
-    .from('tickets')
-    .update({ assigned_to: workerId, status: 'in_progress' })
-    .eq('id', ticketId)
-    .select()
-    .single();
-
-  if (error) {
-    return { error: { message: error.message } };
-  }
-
-  return { data };
+  if (error) throw error;
+  return data;
 }
 
-export async function getTicket(id: string) {
+export async function getWorkers() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, email')
+    .eq('raw_user_meta_data->role', 'worker');
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getTicket(id: string): Promise<Ticket | null> {
   const client = createSupabaseClient();
   const { data: { session }, error: sessionError } = await client.auth.getSession();
 
   if (sessionError || !session) {
-    return { error: { message: 'Not authenticated' } };
+    throw new Error('Not authenticated');
   }
 
   const { data, error } = await client
@@ -177,10 +170,10 @@ export async function getTicket(id: string) {
     .single();
 
   if (error) {
-    return { error: { message: error.message } };
+    throw error;
   }
 
-  return { data };
+  return data;
 }
 
 export async function getUserTickets(
