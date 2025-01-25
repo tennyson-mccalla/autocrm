@@ -7,8 +7,10 @@ import path from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load env from frontend directory
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+// Load env based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.local';
+console.log(`Using environment file: ${envFile}`);
+dotenv.config({ path: path.resolve(__dirname, `../${envFile}`) });
 
 // Create admin client with service role key
 const supabaseAdmin = createClient(
@@ -53,7 +55,7 @@ async function createTestUsers() {
 
       if (existingUser.user) {
         console.log(`User ${user.email} already exists in auth`);
-        
+
         // Confirm email if not already confirmed
         if (!existingUser.user.email_confirmed_at) {
           const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
@@ -67,7 +69,7 @@ async function createTestUsers() {
             console.log(`Confirmed email for ${user.email}`);
           }
         }
-        
+
         continue;
       }
 
