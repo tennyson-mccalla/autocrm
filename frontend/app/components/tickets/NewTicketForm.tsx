@@ -22,7 +22,7 @@ export function NewTicketForm() {
   if (!user) {
     return (
       <div className="p-4 text-center">
-        <p className="text-gray-600">Please sign in to create a ticket</p>
+        <p className="text-gray-600 dark:text-gray-400">Please sign in to create a ticket</p>
       </div>
     )
   }
@@ -72,7 +72,7 @@ export function NewTicketForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto p-4">
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Title
         </label>
         <input
@@ -80,16 +80,16 @@ export function NewTicketForm() {
           id="title"
           value={formData.title}
           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white"
           placeholder="Brief description of the issue"
         />
         {validationErrors.title && (
-          <p className="mt-1 text-sm text-red-600">{validationErrors.title}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.title}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Description
         </label>
         <textarea
@@ -97,23 +97,23 @@ export function NewTicketForm() {
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
           rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white"
           placeholder="Detailed explanation of your issue"
         />
         {validationErrors.description && (
-          <p className="mt-1 text-sm text-red-600">{validationErrors.description}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.description}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Priority
         </label>
         <select
           id="priority"
           value={formData.priority}
           onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white"
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -122,11 +122,11 @@ export function NewTicketForm() {
       </div>
 
       {error && (
-        <div className="text-red-600 text-sm">{error}</div>
+        <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
       )}
 
       {success && (
-        <div className="text-green-600 text-sm">Ticket created successfully!</div>
+        <div className="text-green-600 dark:text-green-400 text-sm">Ticket created successfully!</div>
       )}
 
       <button

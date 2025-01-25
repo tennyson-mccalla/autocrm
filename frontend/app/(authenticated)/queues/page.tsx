@@ -12,6 +12,7 @@ export default function QueuesPage() {
   const [newQueueName, setNewQueueName] = useState('');
   const [newQueueDescription, setNewQueueDescription] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -25,14 +26,21 @@ export default function QueuesPage() {
   }, [selectedQueue]);
 
   useEffect(() => {
-    const loadTickets = async () => {
+    const loadQueueTickets = async () => {
       if (user?.user_metadata.role === 'worker' || user?.user_metadata.role === 'admin') {
-        const queueTickets = await getQueueTickets();
-        setTickets(queueTickets);
+        try {
+          const queueTickets = await getQueueTickets();
+          setTickets(queueTickets);
+          setError(null);
+        } catch (err) {
+          console.error('Error loading queue tickets:', err);
+          setError('Failed to load tickets');
+          setTickets([]);
+        }
       }
     };
 
-    loadTickets();
+    loadQueueTickets();
   }, [user]);
 
   async function loadQueues() {
@@ -42,8 +50,11 @@ export default function QueuesPage() {
       if (data.length > 0 && !selectedQueue) {
         setSelectedQueue(data[0]);
       }
+      setError(null);
     } catch (error) {
       console.error('Error loading queues:', error);
+      setError('Failed to load queues');
+      setQueues([]);
     } finally {
       setLoading(false);
     }
@@ -53,8 +64,11 @@ export default function QueuesPage() {
     try {
       const data = await getTicketsInQueue(queueId);
       setTickets(data);
+      setError(null);
     } catch (error) {
       console.error('Error loading tickets:', error);
+      setError('Failed to load tickets for this queue');
+      setTickets([]);
     }
   }
 
@@ -83,27 +97,32 @@ export default function QueuesPage() {
   return (
     <div>
       <div className="container mx-auto px-4 py-8">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg">
+            {error}
+          </div>
+        )}
         <div className="flex space-x-8">
           {/* Queue List */}
           <div className="w-1/4">
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-medium mb-4">Create Queue</h2>
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+              <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Create Queue</h2>
               <form onSubmit={handleCreateQueue} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
                   <input
                     type="text"
                     value={newQueueName}
                     onChange={(e) => setNewQueueName(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                   <textarea
                     value={newQueueDescription}
                     onChange={(e) => setNewQueueDescription(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
                 <button
@@ -115,8 +134,8 @@ export default function QueuesPage() {
               </form>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium mb-4">Queues</h2>
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Queues</h2>
               <div className="space-y-2">
                 {queues.map((queue) => (
                   <button
@@ -124,13 +143,13 @@ export default function QueuesPage() {
                     onClick={() => setSelectedQueue(queue)}
                     className={`w-full text-left px-4 py-2 rounded ${
                       selectedQueue?.id === queue.id
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'hover:bg-gray-100'
+                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200'
                     }`}
                   >
                     <div className="font-medium">{queue.name}</div>
                     {queue.description && (
-                      <div className="text-sm text-gray-500">{queue.description}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{queue.description}</div>
                     )}
                   </button>
                 ))}
@@ -140,35 +159,35 @@ export default function QueuesPage() {
 
           {/* Ticket List */}
           <div className="w-3/4">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium mb-4">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
                 {selectedQueue ? `Tickets in ${selectedQueue.name}` : 'Select a queue'}
               </h2>
               <div className="space-y-4">
                 {tickets.map((ticket) => (
                   <div
                     key={ticket.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50"
+                    className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                     onClick={() => window.location.href = `/tickets/${ticket.id}`}
                   >
                     <div className="flex items-center justify-between">
-                      <h3 className="font-medium">{ticket.title}</h3>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">{ticket.title}</h3>
                       <span className={`px-2 py-1 text-sm rounded ${
-                        ticket.priority === 'high' ? 'bg-red-100 text-red-800' :
-                        ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
+                        ticket.priority === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                        ticket.priority === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                        'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                       }`}>
                         {ticket.priority}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-2">{ticket.description}</p>
-                    <div className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{ticket.description}</p>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                       Created: {new Date(ticket.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 ))}
                 {tickets.length === 0 && (
-                  <div className="text-center text-gray-500">
+                  <div className="text-center text-gray-500 dark:text-gray-400">
                     No tickets in this queue
                   </div>
                 )}

@@ -86,11 +86,32 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
 }
 
 export async function getQueueTickets(): Promise<Ticket[]> {
-  const { data, error } = await supabase
-    .from('tickets')
-    .select('*, queues(*)')
+  const { data: assignments, error: assignmentsError } = await supabase
+    .from('queue_assignments')
+    .select(`
+      tickets!inner(
+        id,
+        title,
+        description,
+        priority,
+        created_at,
+        created_by,
+        status,
+        updated_at,
+        assigned_to
+      ),
+      queues!inner(
+        id,
+        name,
+        description
+      )
+    `)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data;
+  if (assignmentsError) throw assignmentsError;
+
+  return assignments?.map(d => ({
+    ...d.tickets,
+    queue: d.queues
+  })) as unknown as Ticket[];
 }

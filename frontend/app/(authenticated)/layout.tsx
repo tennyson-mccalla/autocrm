@@ -1,6 +1,5 @@
 'use client';
 
-import Navigation from '../components/Navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -33,7 +32,6 @@ export default function AuthenticatedLayout({
 
   return (
     <div>
-      <Navigation />
       <main>{children}</main>
     </div>
   );
