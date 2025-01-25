@@ -1,61 +1,54 @@
--- Seed Users
-INSERT INTO users (id, email, role, full_name, metadata) VALUES
-  -- Admin
-  ('d0d4671e-3b1d-4b39-b9a1-df62a6651a56', 'admin@test.com', 'admin', 'Admin User', '{"department": "Management"}'),
+-- Insert test users first
+INSERT INTO users (id, email, role, full_name) VALUES
+  ('8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'alice@test.com', 'worker', 'Alice Worker'),
+  ('b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'bob@test.com', 'worker', 'Bob Worker'),
+  ('e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', 'charlie@test.com', 'customer', 'Charlie Customer'),
+  ('f7d8e9a2-6b5c-4f3d-8e9f-1a2b3c4d5e6f', 'diana@test.com', 'customer', 'Diana Customer'),
+  ('a9b8c7d6-e5f4-3g2h-1i0j-k9l8m7n6o5p4', 'admin@test.com', 'admin', 'Admin User');
 
-  -- Workers
-  ('8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'worker1@test.com', 'worker', 'Alice Worker', '{"department": "Support", "specialty": "Technical"}'),
-  ('b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'worker2@test.com', 'worker', 'Bob Worker', '{"department": "Support", "specialty": "Billing"}'),
-
-  -- Customers
-  ('e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', 'customer1@test.com', 'customer', 'Charlie Customer', '{"company": "TechCorp"}'),
-  ('f7d8e9a2-6b5c-4f3d-8e9f-1a2b3c4d5e6f', 'customer2@test.com', 'customer', 'Diana Customer', '{"company": "StartupInc"}');
-
--- Seed Tickets
-INSERT INTO tickets (id, title, description, status, priority, created_by, assigned_to, metadata) VALUES
-  -- High priority ticket
+-- Insert test tickets
+INSERT INTO tickets (id, title, description, status, priority, created_by, assigned_to) VALUES
   ('a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f',
    'Unable to access account',
    'Getting 403 error when trying to log in',
    'new',
    'high',
-   'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', -- Charlie
-   '8f9c55da-5c13-4f28-9e4e-74a8c1834875', -- Alice
-   '{"browser": "Chrome", "version": "120.0"}'),
-
-  -- Medium priority ticket
+   'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12',
+   '8f9c55da-5c13-4f28-9e4e-74a8c1834875'),
   ('b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a',
    'Billing inquiry',
    'Question about last month''s invoice',
    'in_progress',
    'medium',
-   'f7d8e9a2-6b5c-4f3d-8e9f-1a2b3c4d5e6f', -- Diana
-   'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', -- Bob
-   '{"invoice_id": "INV-2024-01"}'),
-
-  -- Resolved ticket
+   'f7d8e9a2-6b5c-4f3d-8e9f-1a2b3c4d5e6f',
+   'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723'),
   ('c3d4e5f6-a7b8-6c7d-0e1f-3b4c5d6e7f8a',
    'Feature request: Dark mode',
    'Would like dark mode option in dashboard',
    'resolved',
    'low',
-   'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', -- Charlie
-   '8f9c55da-5c13-4f28-9e4e-74a8c1834875', -- Alice
-   '{"area": "UI", "theme": "Dark"}');
+   'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12',
+   '8f9c55da-5c13-4f28-9e4e-74a8c1834875');
 
--- Seed Conversations
+-- Insert test conversations
 INSERT INTO conversations (id, ticket_id, user_id, message, internal_note) VALUES
-  -- High priority ticket conversation
-  (uuid_generate_v4(), 'a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f', 'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', 'I keep getting locked out of my account', FALSE),
-  (uuid_generate_v4(), 'a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f', '8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'Checking security logs now', FALSE),
-  (uuid_generate_v4(), 'a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f', '8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'Multiple failed login attempts detected', TRUE),
-
-  -- Medium priority ticket conversation
-  (uuid_generate_v4(), 'b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a', 'f7d8e9a2-6b5c-4f3d-8e9f-1a2b3c4d5e6f', 'I think I was overcharged last month', FALSE),
-  (uuid_generate_v4(), 'b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a', 'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'Looking into the billing records', FALSE),
-  (uuid_generate_v4(), 'b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a', 'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'Found duplicate charge - will process refund', TRUE),
-
-  -- Resolved ticket conversation
+  (uuid_generate_v4(), 'a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f', 'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', 'I cannot log in to my account', FALSE),
+  (uuid_generate_v4(), 'a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f', '8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'Looking into this now', FALSE),
+  (uuid_generate_v4(), 'a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f', '8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'User account locked - too many attempts', TRUE),
+  (uuid_generate_v4(), 'b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a', 'f7d8e9a2-6b5c-4f3d-8e9f-1a2b3c4d5e6f', 'Need clarification on invoice', FALSE),
+  (uuid_generate_v4(), 'b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a', 'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'Which line item specifically?', FALSE),
+  (uuid_generate_v4(), 'b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a', 'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723', 'Checking with billing department', TRUE),
   (uuid_generate_v4(), 'c3d4e5f6-a7b8-6c7d-0e1f-3b4c5d6e7f8a', 'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12', 'Dark mode would be great for night work', FALSE),
   (uuid_generate_v4(), 'c3d4e5f6-a7b8-6c7d-0e1f-3b4c5d6e7f8a', '8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'Feature request logged with development team', FALSE),
   (uuid_generate_v4(), 'c3d4e5f6-a7b8-6c7d-0e1f-3b4c5d6e7f8a', '8f9c55da-5c13-4f28-9e4e-74a8c1834875', 'Scheduled for next sprint', TRUE);
+
+-- Insert test queues
+INSERT INTO queues (id, name, description) VALUES
+  ('d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a', 'General Support', 'General customer support inquiries'),
+  ('e2f3a4b5-c6d7-8e9f-0a1b-2c3d4e5f6a7b', 'Technical Issues', 'Technical problems and bugs'),
+  ('f3a4b5c6-d7e8-9f0a-1b2c-3d4e5f6a7b8c', 'Billing Support', 'Billing and payment related issues');
+
+-- Insert test queue assignments
+INSERT INTO queue_assignments (queue_id, ticket_id, assigned_by) VALUES
+  ('d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a', 'a1b2c3d4-e5f6-4a5b-8c9d-1a2b3c4d5e6f', '8f9c55da-5c13-4f28-9e4e-74a8c1834875'),
+  ('e2f3a4b5-c6d7-8e9f-0a1b-2c3d4e5f6a7b', 'b2c3d4e5-f6a7-5b6c-9d0e-2b3c4d5e6f7a', 'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723');
