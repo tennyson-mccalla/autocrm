@@ -6,7 +6,18 @@ import { createSupabaseClient } from './auth';
 export type TicketPriority = 'low' | 'medium' | 'high'
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 
-export type Ticket = Database['public']['Tables']['tickets']['Row'];
+export interface Ticket {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  created_at: string;
+  created_by: string;
+  status: 'open' | 'in_progress' | 'closed';
+  updated_at: string;
+  assigned_to?: string;
+}
+
 export type NewTicket = Omit<Ticket, 'id' | 'created_at' | 'updated_at'>;
 
 export interface TicketData {
