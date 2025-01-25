@@ -16,6 +16,20 @@ export interface Ticket {
   status: 'open' | 'in_progress' | 'closed';
   updated_at: string;
   assigned_to?: string;
+  queue_assignments?: Array<{
+    id: string;
+    queue_id: string;
+    queues?: {
+      id: string;
+      name: string;
+    };
+  }>;
+  conversations?: Array<{
+    count: number;
+  }>;
+  assigned_to_user?: {
+    full_name: string;
+  };
 }
 
 export type NewTicket = Omit<Ticket, 'id' | 'created_at' | 'updated_at'>;
@@ -72,7 +86,21 @@ export async function listTickets() {
   }
 
   const userRole = session.user.user_metadata.role;
-  let query = client.from('tickets').select('*');
+  let query = client
+    .from('tickets')
+    .select(`
+      *,
+      conversations (count),
+      queue_assignments (
+        queue_id,
+        queues (
+          name
+        )
+      ),
+      assigned_to_user:users!tickets_assigned_to_fkey (
+        full_name
+      )
+    `);
 
   if (userRole === 'customer') {
     query = query.eq('created_by', session.user.id);

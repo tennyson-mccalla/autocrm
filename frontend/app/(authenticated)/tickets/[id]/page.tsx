@@ -6,6 +6,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { getTicket, Ticket } from '@/app/lib/tickets';
 import QueueSelector from '@/app/components/tickets/QueueSelector';
 import AssignTicket from '@/app/components/tickets/AssignTicket';
+import ConversationSection from '@/app/components/tickets/ConversationSection';
 
 export default function TicketPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -78,13 +79,13 @@ export default function TicketPage({ params }: { params: { id: string } }) {
           <QueueSelector ticketId={ticket.id} />
           <AssignTicket ticketId={ticket.id} />
 
-          <div className="bg-white shadow rounded-lg p-6 mt-4">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-4">
             <div>
-              <h2 className="text-lg font-medium mb-2">Description</h2>
-              <p className="text-gray-600 whitespace-pre-wrap">{ticket.description}</p>
+              <h2 className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Description</h2>
+              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{ticket.description}</p>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-gray-500 mt-4">
+            <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-4">
               <div className="flex items-center space-x-2">
                 <span className={`w-2 h-2 rounded-full ${
                   ticket.priority === 'high' ? 'bg-red-500' :
@@ -100,25 +101,7 @@ export default function TicketPage({ params }: { params: { id: string } }) {
           </div>
 
           {/* Conversation Section */}
-          <div className="bg-white shadow rounded-lg p-6 mt-4">
-            <h2 className="text-lg font-medium mb-4">Conversation</h2>
-            <div className="space-y-4">
-              {/* Placeholder for future conversation implementation */}
-              <div className="text-gray-500 text-center py-4">
-                No messages yet. Be the first to comment on this ticket.
-              </div>
-              <div className="mt-4">
-                <textarea
-                  placeholder="Type your message here..."
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                />
-                <button className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                  Send Message
-                </button>
-              </div>
-            </div>
-          </div>
+          <ConversationSection ticketId={ticket.id} />
         </div>
       </div>
     </div>

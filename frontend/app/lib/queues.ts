@@ -1,6 +1,6 @@
-import { supabase } from './supabase';
 import { Database } from '../types/supabase';
 import { Ticket } from './tickets';
+import { supabase } from '../lib/supabase';
 
 export type Queue = {
   id: string;
@@ -53,65 +53,62 @@ export async function assignTicketToQueue(ticketId: string, queueId: string) {
 export async function getQueueAssignments(ticketId: string) {
   const { data, error } = await supabase
     .from('queue_assignments')
-    .select(`
-      *,
-      queue:queues(*)
-    `)
+    .select('*')
     .eq('ticket_id', ticketId);
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error getting queue assignments:', error);
+    return null;
+  }
+
   return data;
 }
 
-export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
+export async function getTicketsInQueue(queueId: string) {
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
-      tickets!inner(
+      *,
+      tickets (
         id,
         title,
         description,
-        priority,
-        created_at,
-        created_by,
         status,
-        updated_at
+        priority,
+        created_by,
+        assigned_to
       )
     `)
-    .eq('queue_id', queueId)
-    .returns<{ tickets: Ticket }[]>();
+    .eq('queue_id', queueId);
 
-  if (error) throw error;
-  return data?.map(d => d.tickets) || [];
+  if (error) {
+    console.error('Error getting tickets in queue:', error);
+    return null;
+  }
+
+  return data?.map(assignment => assignment.tickets);
 }
 
-export async function getQueueTickets(): Promise<Ticket[]> {
-  const { data: assignments, error: assignmentsError } = await supabase
+export async function getQueueTickets() {
+  const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
-      tickets!inner(
+      *,
+      tickets (
         id,
         title,
         description,
-        priority,
-        created_at,
-        created_by,
         status,
-        updated_at,
+        priority,
+        created_by,
         assigned_to
-      ),
-      queues!inner(
-        id,
-        name,
-        description
       )
-    `)
-    .order('created_at', { ascending: false });
+    `);
 
-  if (assignmentsError) throw assignmentsError;
+  if (error) {
+    console.error('Error getting queue tickets:', error);
+    return null;
+  }
 
-  return assignments?.map(d => ({
-    ...d.tickets,
-    queue: d.queues
-  })) as unknown as Ticket[];
+  return data?.map(assignment => assignment.tickets);
 }

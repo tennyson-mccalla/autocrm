@@ -23,6 +23,14 @@ export interface Ticket {
   assigned_to?: string;
   created_at: string;
   updated_at: string;
+  queue_assignments?: Array<{
+    id: string;
+    queue_id: string;
+    queues?: {
+      id: string;
+      name: string;
+    };
+  }>;
 }
 
 export interface Conversation {
@@ -32,4 +40,8 @@ export interface Conversation {
   message: string;
   internal_note: boolean;
   created_at: string;
+  users?: {
+    full_name: string;
+    role: UserRole;
+  };
 }

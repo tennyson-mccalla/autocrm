@@ -30,7 +30,7 @@ export default function QueuesPage() {
       if (user?.user_metadata.role === 'worker' || user?.user_metadata.role === 'admin') {
         try {
           const queueTickets = await getQueueTickets();
-          setTickets(queueTickets);
+          setTickets(queueTickets || []);
           setError(null);
         } catch (err) {
           console.error('Error loading queue tickets:', err);
@@ -46,8 +46,8 @@ export default function QueuesPage() {
   async function loadQueues() {
     try {
       const data = await getQueues();
-      setQueues(data);
-      if (data.length > 0 && !selectedQueue) {
+      setQueues(data || []);
+      if (data?.length > 0 && !selectedQueue) {
         setSelectedQueue(data[0]);
       }
       setError(null);
@@ -63,7 +63,7 @@ export default function QueuesPage() {
   async function loadTickets(queueId: string) {
     try {
       const data = await getTicketsInQueue(queueId);
-      setTickets(data);
+      setTickets(data || []);
       setError(null);
     } catch (error) {
       console.error('Error loading tickets:', error);

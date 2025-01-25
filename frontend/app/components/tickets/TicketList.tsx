@@ -113,23 +113,50 @@ export function TicketList() {
               }`}>
                 {ticket.status}
               </span>
-              {ticket.assigned_to && (
-                <span className="px-2 py-1 rounded text-sm bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
-                  {ticket.assigned_to === user?.id ? 'Assigned to me' : 'Assigned'}
-                </span>
-              )}
             </div>
           </div>
           <p className="mt-2 text-gray-600 dark:text-gray-300">{ticket.description}</p>
-          <div className="mt-4 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-            <div className="flex items-center space-x-2">
-              <span className={`w-2 h-2 rounded-full ${
-                ticket.priority === 'high' ? 'bg-red-500' :
-                ticket.priority === 'medium' ? 'bg-yellow-500' :
-                'bg-green-500'
-              }`} />
-              <span>{ticket.priority} priority</span>
+          <div className="mt-4 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center space-x-4">
+              {/* Priority indicator */}
+              <div className="flex items-center space-x-2">
+                <span className={`w-2 h-2 rounded-full ${
+                  ticket.priority === 'high' ? 'bg-red-500' :
+                  ticket.priority === 'medium' ? 'bg-yellow-500' :
+                  'bg-green-500'
+                }`} />
+                <span>{ticket.priority} priority</span>
+              </div>
+
+              {/* Queue indicator */}
+              {ticket.queue_assignments?.[0]?.queues && (
+                <div className="flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>{ticket.queue_assignments[0].queues.name}</span>
+                </div>
+              )}
+
+              {/* Assignee indicator */}
+              {ticket.assigned_to_user && (
+                <div className="flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{ticket.assigned_to_user.full_name}</span>
+                </div>
+              )}
+
+              {/* Conversation count */}
+              <div className="flex items-center space-x-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>{ticket.conversations?.[0]?.count || 0}</span>
+              </div>
             </div>
+
             <time dateTime={ticket.created_at}>
               {new Date(ticket.created_at).toLocaleDateString()}
             </time>
