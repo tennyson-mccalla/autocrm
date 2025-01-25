@@ -1,6 +1,9 @@
 import './globals.css';
 import { Providers } from './components/Providers';
 import { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'AutoCRM',
@@ -13,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-gray-50">
+    <html lang="en" className={`h-full bg-gray-50 ${inter.className}`}>
       <body className="h-full">
         <Providers>
           {children}
