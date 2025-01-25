@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Queue, createQueue, getQueues, getTicketsInQueue } from '../lib/queues';
-import { Ticket } from '../lib/tickets';
-import Navigation from '../components/Navigation';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { Ticket } from '@/app/lib/tickets';
+import { getQueueTickets, Queue, createQueue, getQueues, getTicketsInQueue } from '@/app/lib/queues';
 
 export default function QueuesPage() {
   const [queues, setQueues] = useState<Queue[]>([]);
@@ -12,6 +12,7 @@ export default function QueuesPage() {
   const [newQueueName, setNewQueueName] = useState('');
   const [newQueueDescription, setNewQueueDescription] = useState('');
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadQueues();
@@ -22,6 +23,17 @@ export default function QueuesPage() {
       loadTickets(selectedQueue.id);
     }
   }, [selectedQueue]);
+
+  useEffect(() => {
+    const loadTickets = async () => {
+      if (user?.user_metadata.role === 'worker' || user?.user_metadata.role === 'admin') {
+        const queueTickets = await getQueueTickets();
+        setTickets(queueTickets);
+      }
+    };
+
+    loadTickets();
+  }, [user]);
 
   async function loadQueues() {
     try {
@@ -64,9 +76,12 @@ export default function QueuesPage() {
     return <div className="animate-pulse">Loading queues...</div>;
   }
 
+  if (!user || user.user_metadata.role === 'customer') {
+    return <div>Access denied</div>;
+  }
+
   return (
     <div>
-      <Navigation />
       <div className="container mx-auto px-4 py-8">
         <div className="flex space-x-8">
           {/* Queue List */}

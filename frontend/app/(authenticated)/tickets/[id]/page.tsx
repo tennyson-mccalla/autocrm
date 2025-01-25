@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
-import { getTicket, Ticket } from '../../lib/tickets';
-import QueueSelector from '../../components/tickets/QueueSelector';
-import Navigation from '../../components/Navigation';
-import AssignTicket from '../../components/tickets/AssignTicket';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { getTicket, Ticket } from '@/app/lib/tickets';
+import QueueSelector from '@/app/components/tickets/QueueSelector';
+import AssignTicket from '@/app/components/tickets/AssignTicket';
 
 export default function TicketPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -52,21 +51,19 @@ export default function TicketPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div>
-      <Navigation />
-      
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <button
+        onClick={handleBack}
+        className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
+      >
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Tickets
+      </button>
+
       <div className="p-4">
         <div className="max-w-3xl mx-auto">
-          <button
-            onClick={handleBack}
-            className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Tickets
-          </button>
-
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-2xl font-semibold">{ticket.title}</h1>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${

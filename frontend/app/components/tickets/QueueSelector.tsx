@@ -16,7 +16,7 @@ export default function QueueSelector({ ticketId }: { ticketId: string }) {
           getQueueAssignments(ticketId)
         ]);
         setQueues(queuesList);
-        setCurrentAssignments(assignments.map(a => a.queue_id));
+        setCurrentAssignments(assignments.map((a: { queue_id: string }) => a.queue_id));
       } catch (error) {
         console.error('Error loading queues:', error);
       } finally {

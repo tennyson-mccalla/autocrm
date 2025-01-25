@@ -1,16 +1,11 @@
-import { createClient } from './supabase';
+import { supabase } from './supabase';
 import type { Database } from '../types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-let supabaseClient: ReturnType<typeof createClient>;
-
 export function createSupabaseClient() {
-  if (!supabaseClient) {
-    supabaseClient = createClient();
-  }
-  return supabaseClient;
+  return supabase;
 }
 
 type UserRole = 'admin' | 'worker' | 'customer';
@@ -19,7 +14,7 @@ export async function signUpUser(
   email: string,
   password: string,
   role: UserRole,
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   const { data, error } = await client.auth.signUp({
     email,
@@ -39,7 +34,7 @@ export async function signUpUser(
 export async function signInUser(
   email: string,
   password: string,
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   const { data, error } = await client.auth.signInWithPassword({
     email,
@@ -54,14 +49,14 @@ export async function signInUser(
 }
 
 export async function signOutUser(
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   const { error } = await client.auth.signOut();
   return { error };
 }
 
 export async function getCurrentUser(
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   const { data: { session }, error } = await client.auth.getSession();
   
@@ -74,7 +69,7 @@ export async function getCurrentUser(
 
 export async function getUserProfile(
   userId: string,
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   if (!userId) {
     return { user: null, error: { message: 'User ID is required' } };
@@ -108,7 +103,7 @@ export async function getUserProfile(
 }
 
 export async function listAllUsers(
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {
@@ -137,7 +132,7 @@ export async function updateUserProfile(
     full_name?: string;
     metadata?: Record<string, any>;
   },
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {
@@ -182,7 +177,7 @@ export async function updateUserProfile(
 export async function updateUserRole(
   userId: string,
   newRole: UserRole,
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: typeof supabase = createSupabaseClient()
 ) {
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {

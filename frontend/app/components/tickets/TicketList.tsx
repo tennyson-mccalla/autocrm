@@ -15,34 +15,43 @@ export function TicketList() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    async function fetchTickets() {
-      try {
-        setLoading(true);
-        setError(null);
+  async function fetchTickets() {
+    try {
+      setLoading(true);
+      setError(null);
 
-        if (!user) {
-          setError('Please sign in to view tickets');
-          return;
-        }
-
-        const { data, error: ticketError } = await listTickets();
-        
-        if (ticketError) {
-          setError(ticketError.message);
-          return;
-        }
-
-        setTickets(data || []);
-      } catch (err) {
-        setError('Error loading tickets');
-        console.error('Error loading tickets:', err);
-      } finally {
-        setLoading(false);
+      if (!user) {
+        setError('Please sign in to view tickets');
+        return;
       }
-    }
 
+      const { data, error: ticketError } = await listTickets();
+      
+      if (ticketError) {
+        setError(ticketError.message);
+        return;
+      }
+
+      setTickets(data || []);
+    } catch (err) {
+      setError('Error loading tickets');
+      console.error('Error loading tickets:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
     fetchTickets();
+  }, [user]);
+
+  // Refresh tickets every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (user) fetchTickets();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleTicketClick = (ticketId: string) => {
@@ -96,13 +105,20 @@ export function TicketList() {
         >
           <div className="flex justify-between items-start">
             <h3 className="text-lg font-medium">{ticket.title}</h3>
-            <span className={`px-2 py-1 rounded text-sm ${
-              ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' :
-              ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-              'bg-green-100 text-green-800'
-            }`}>
-              {ticket.status}
-            </span>
+            <div className="flex gap-2">
+              <span className={`px-2 py-1 rounded text-sm ${
+                ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' :
+                ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                'bg-green-100 text-green-800'
+              }`}>
+                {ticket.status}
+              </span>
+              {ticket.assigned_to && (
+                <span className="px-2 py-1 rounded text-sm bg-purple-100 text-purple-800">
+                  {ticket.assigned_to === user?.id ? 'Assigned to me' : 'Assigned'}
+                </span>
+              )}
+            </div>
           </div>
           <p className="mt-2 text-gray-600">{ticket.description}</p>
           <div className="mt-4 flex justify-between text-sm text-gray-500">

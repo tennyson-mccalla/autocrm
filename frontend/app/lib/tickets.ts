@@ -1,4 +1,4 @@
-import { createClient } from './supabase';
+import { supabase } from './supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/supabase';
 import { createSupabaseClient } from './auth';
@@ -64,7 +64,7 @@ export async function listTickets() {
   let query = client.from('tickets').select('*');
 
   if (userRole === 'customer') {
-    query = query.eq('user_id', session.user.id);
+    query = query.eq('created_by', session.user.id);
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });

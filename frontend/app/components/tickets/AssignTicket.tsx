@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { assignTicket, getWorkers } from '../../lib/tickets';
+import { useRouter } from 'next/router';
 
 interface Worker {
   id: string;
@@ -13,6 +14,7 @@ export default function AssignTicket({ ticketId }: { ticketId: string }) {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchWorkers() {
@@ -33,7 +35,8 @@ export default function AssignTicket({ ticketId }: { ticketId: string }) {
     try {
       setLoading(true);
       await assignTicket(ticketId, assignedTo);
-      window.location.reload(); // Refresh to show changes
+      // Trigger a page refresh after successful assignment
+      router.refresh();
     } catch (error) {
       console.error('Error assigning ticket:', error);
     } finally {

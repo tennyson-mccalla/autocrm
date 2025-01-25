@@ -125,7 +125,12 @@ async function createTestData() {
     }
 
     console.log('Creating test tickets...');
-    const customerId = '18225e2b-ce69-4e72-b3ca-6391847b0725';
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('No user found after sign in');
+      return;
+    }
+    const customerId = user.id;
 
     for (const ticket of TEST_TICKETS) {
       const { error: ticketError } = await supabase
@@ -142,11 +147,22 @@ async function createTestData() {
       }
     }
 
+    // Sign in as admin to create queues
+    console.log('Signing in as admin to create queues...');
+    const { error: adminSignInError } = await supabase.auth.signInWithPassword({
+      email: 'admin@test.com',
+      password: 'Admin123!'
+    });
+
+    if (adminSignInError) {
+      console.error('Error signing in as admin:', adminSignInError.message);
+      return;
+    }
+
     console.log('Creating test queues...');
     for (const queue of TEST_QUEUES) {
       const { error: queueError } = await supabase
-        .from('queues')
-        .insert(queue);
+        .rpc('create_queue', { name: queue.name, description: queue.description });
 
       if (queueError) {
         console.error(`Error creating queue ${queue.name}:`, queueError.message);

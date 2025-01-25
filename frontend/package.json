@@ -10,12 +10,14 @@
     "test": "jest"
   },
   "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.48.1",
     "dotenv": "^16.4.7",
     "next": "^14.0.4",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-error-boundary": "^5.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",

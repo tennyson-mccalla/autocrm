@@ -70,7 +70,9 @@ create policy "Queues are viewable by authenticated users"
 create policy "Queues are insertable by authenticated users"
   on public.queues for insert
   to authenticated
-  with check (true);
+  with check (
+    auth.jwt() ->> 'role' = 'admin'
+  );
 
 create policy "Queue assignments are viewable by authenticated users"
   on public.queue_assignments for select

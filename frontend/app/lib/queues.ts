@@ -1,8 +1,6 @@
-import { createClient } from './supabase';
+import { supabase } from './supabase';
 import { Database } from '../types/supabase';
 import { Ticket } from './tickets';
-
-const supabase = createClient();
 
 export type Queue = {
   id: string;
@@ -85,4 +83,14 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
 
   if (error) throw error;
   return data?.map(d => d.tickets) || [];
+}
+
+export async function getQueueTickets(): Promise<Ticket[]> {
+  const { data, error } = await supabase
+    .from('tickets')
+    .select('*, queues(*)')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
 }
