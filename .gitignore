@@ -50,3 +50,4 @@ sql/migrations/
 ONBOARDING.md
 docs/presentation_script.md
 *.dump
+scripts/
