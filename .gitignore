@@ -44,3 +44,9 @@ supabase/reset-db.sh
 
 # Work in progress
 frontend/app/dashboard/
+sql/migrations/
+
+# Documentation and database dumps
+ONBOARDING.md
+docs/presentation_script.md
+*.dump
