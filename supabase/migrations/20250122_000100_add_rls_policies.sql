@@ -60,6 +60,15 @@ CREATE POLICY "Workers can update assigned tickets"
         AND assigned_to = auth.uid()
     );
 
+-- Add policy for workers to assign tickets to themselves
+CREATE POLICY "Workers can assign tickets to themselves"
+    ON tickets FOR UPDATE
+    USING (check_user_role('worker'::user_role))
+    WITH CHECK (
+        check_user_role('worker'::user_role)
+        AND (assigned_to = auth.uid() OR assigned_to IS NULL)
+    );
+
 -- Conversations table policies
 CREATE POLICY "Customers can access conversations on own tickets"
     ON conversations FOR ALL
