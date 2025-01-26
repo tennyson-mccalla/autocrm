@@ -126,29 +126,37 @@ export async function listTickets() {
 
   // Only fetch queue assignments and conversations for workers and admins
   if (userRole === 'worker' || userRole === 'admin') {
-    // Try to get queue assignments separately
-    const { data: qa, error: queueError } = await client
-      .from('queue_assignments')
-      .select(`
-        ticket_id,
-        queue_id,
-        queues (
-          id,
-          name
-        )
-      `);
+    try {
+      // Try to get queue assignments separately
+      const { data: qa, error: queueError } = await client
+        .from('queue_assignments')
+        .select(`
+          ticket_id,
+          queue_id,
+          queues (
+            id,
+            name
+          )
+        `);
 
-    if (!queueError && qa) {
-      queueAssignments = qa as QueueAssignment[];
+      if (!queueError && qa) {
+        queueAssignments = qa as QueueAssignment[];
+      }
+    } catch (error) {
+      console.debug('Queue assignments not available:', error);
     }
 
-    // Try to get conversations separately
-    const { data: conv, error: convoError } = await client
-      .from('conversations')
-      .select('ticket_id, count');
+    try {
+      // Try to get conversations separately
+      const { data: conv, error: convoError } = await client
+        .from('conversations')
+        .select('ticket_id, count');
 
-    if (!convoError && conv) {
-      conversations = conv as Conversation[];
+      if (!convoError && conv) {
+        conversations = conv as Conversation[];
+      }
+    } catch (error) {
+      console.debug('Conversations not available:', error);
     }
   }
 
