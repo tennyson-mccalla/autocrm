@@ -250,8 +250,8 @@ export async function assignTicket(ticketId: string, assignedTo: string) {
 export async function getWorkers() {
   const client = createSupabaseClient();
   const { data, error } = await client
-    .from('profiles')
-    .select('*')
+    .from('users')
+    .select('id, email, full_name')
     .eq('role', 'worker');
 
   if (error) {
