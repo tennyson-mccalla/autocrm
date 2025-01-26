@@ -2,8 +2,8 @@
 create table if not exists public.ticket_assignments (
   id uuid default gen_random_uuid() primary key,
   ticket_id uuid references public.tickets(id) on delete cascade not null,
-  assigned_to uuid references auth.users(id) on delete cascade not null,
-  assigned_by uuid references auth.users(id) not null,
+  assigned_to uuid references public.users(id) on delete cascade not null,
+  assigned_by uuid references public.users(id) not null,
   assigned_at timestamp with time zone default timezone('utc'::text, now()) not null,
   unique(ticket_id, assigned_to)
 );
@@ -53,7 +53,7 @@ begin
   insert into public.ticket_assignments (ticket_id, assigned_to, assigned_by)
   values (_ticket_id, _assigned_to, auth.uid())
   returning * into v_assignment;
-  
+
   return v_assignment;
 end;
 $$;

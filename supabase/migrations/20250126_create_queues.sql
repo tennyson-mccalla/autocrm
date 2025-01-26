@@ -13,7 +13,7 @@ create table if not exists public.queue_assignments (
   queue_id uuid references public.queues(id) on delete cascade not null,
   ticket_id uuid references public.tickets(id) on delete cascade not null,
   assigned_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  assigned_by uuid references auth.users(id) not null,
+  assigned_by uuid references public.users(id) not null,
   unique(queue_id, ticket_id)
 );
 
@@ -92,10 +92,20 @@ create or replace function public.assign_ticket_to_queue(
 language plpgsql security definer
 as $$
 declare
+  v_user_id uuid;
   v_assignment public.queue_assignments;
 begin
+  -- Get the user ID from auth.users and find matching public.users record
+  select id into v_user_id
+  from public.users
+  where id = auth.uid();
+
+  if v_user_id is null then
+    raise exception 'User not found';
+  end if;
+
   insert into public.queue_assignments (queue_id, ticket_id, assigned_by)
-  values (_queue_id, _ticket_id, auth.uid())
+  values (_queue_id, _ticket_id, v_user_id)
   returning * into v_assignment;
 
   return v_assignment;

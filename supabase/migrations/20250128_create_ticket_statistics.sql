@@ -48,14 +48,13 @@ SELECT
     AVG(EXTRACT(EPOCH FROM (t.updated_at - t.created_at))/3600)::numeric(10,2) as avg_resolution_time_hours
 FROM users u
 LEFT JOIN tickets t ON t.assigned_to = u.id
-WHERE u.raw_user_meta_data->>'role' = 'worker'
+WHERE u.role = 'worker'
 GROUP BY u.id, u.email;
 
 -- Add performance indexes
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_tickets_queue_id ON tickets(queue_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_assigned_to ON tickets(assigned_to);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users((raw_user_meta_data->>'role'));
 
 -- Rollback section
 -- To rollback, run the following:
@@ -64,7 +63,6 @@ CREATE INDEX IF NOT EXISTS idx_users_role ON users((raw_user_meta_data->>'role')
 DROP INDEX IF EXISTS idx_tickets_status;
 DROP INDEX IF EXISTS idx_tickets_queue_id;
 DROP INDEX IF EXISTS idx_tickets_assigned_to;
-DROP INDEX IF EXISTS idx_users_role;
 
 -- Drop new views
 DROP VIEW IF EXISTS ticket_statistics;

@@ -11,19 +11,51 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function shouldUseDarkMode(): boolean {
+  // Check if it's nighttime (between 6 PM and 6 AM)
+  const hour = new Date().getHours();
+  const isNightTime = hour < 6 || hour >= 18;
+
+  // Check system preference
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  return prefersDark || isNightTime;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
     // Check if user has a saved preference
     const savedTheme = localStorage.getItem('theme') as Theme;
-
     if (savedTheme) {
       setTheme(savedTheme);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      // If no saved preference, check system preference
-      setTheme('dark');
+    } else {
+      // If no saved preference, use system/time preference
+      setTheme(shouldUseDarkMode() ? 'dark' : 'light');
     }
+
+    // Listen for system preference changes (only if no saved preference)
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (!localStorage.getItem('theme')) {
+        setTheme(shouldUseDarkMode() ? 'dark' : 'light');
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    // Check every hour for time-based changes (only if no saved preference)
+    const interval = setInterval(() => {
+      if (!localStorage.getItem('theme')) {
+        setTheme(shouldUseDarkMode() ? 'dark' : 'light');
+      }
+    }, 60 * 60 * 1000); // Every hour
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
