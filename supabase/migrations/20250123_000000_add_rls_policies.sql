@@ -40,15 +40,10 @@ CREATE POLICY "Users can read own profile"
     ON users FOR SELECT
     USING (auth.uid() = id);
 
-CREATE POLICY "Users can insert own profile"
-    ON users FOR INSERT
-    WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Workers can read all customer profiles"
+CREATE POLICY "Workers can read all profiles"
     ON users FOR SELECT
     USING (
         (auth.jwt() ->> 'user_metadata')::jsonb ->> 'role' = 'worker'
-        AND role = 'customer'
     );
 
 CREATE POLICY "Admins have full access to all profiles"

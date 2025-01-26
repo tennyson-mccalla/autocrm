@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { createSupabaseClient } from '../../lib/auth';
 import type { Conversation } from '../../types';
 
 interface ConversationSectionProps {
@@ -20,7 +20,8 @@ export default function ConversationSection({ ticketId }: ConversationSectionPro
 
   async function loadMessages() {
     try {
-      const { data, error } = await supabase
+      const client = createSupabaseClient();
+      const { data, error } = await client
         .from('conversations')
         .select(`
           *,
@@ -47,7 +48,8 @@ export default function ConversationSection({ ticketId }: ConversationSectionPro
     if (!newMessage.trim() || !user) return;
 
     try {
-      const { error } = await supabase
+      const client = createSupabaseClient();
+      const { error } = await client
         .from('conversations')
         .insert({
           ticket_id: ticketId,

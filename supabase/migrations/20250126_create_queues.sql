@@ -65,13 +65,15 @@ end$$;
 create policy "Queues are viewable by authenticated users"
   on public.queues for select
   to authenticated
-  using (true);
+  using (
+    auth.jwt() ->> 'role' IN ('admin', 'worker')
+  );
 
 create policy "Queues are insertable by authenticated users"
   on public.queues for insert
   to authenticated
   with check (
-    auth.jwt() ->> 'role' = 'admin'
+    auth.jwt() ->> 'role' IN ('admin', 'worker')
   );
 
 create policy "Queue assignments are viewable by authenticated users"

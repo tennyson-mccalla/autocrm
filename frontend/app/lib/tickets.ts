@@ -147,10 +147,9 @@ export async function listTickets() {
     }
 
     try {
-      // Try to get conversations separately
+      // Try to get conversations count per ticket
       const { data: conv, error: convoError } = await client
-        .from('conversations')
-        .select('ticket_id, count');
+        .rpc('count_conversations_per_ticket');
 
       if (!convoError && conv) {
         conversations = conv as Conversation[];

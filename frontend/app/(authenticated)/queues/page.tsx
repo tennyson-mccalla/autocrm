@@ -105,34 +105,36 @@ export default function QueuesPage() {
         <div className="flex space-x-8">
           {/* Queue List */}
           <div className="w-1/4">
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Create Queue</h2>
-              <form onSubmit={handleCreateQueue} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                  <input
-                    type="text"
-                    value={newQueueName}
-                    onChange={(e) => setNewQueueName(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                  <textarea
-                    value={newQueueDescription}
-                    onChange={(e) => setNewQueueDescription(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Create Queue
-                </button>
-              </form>
-            </div>
+            {user?.user_metadata.role === 'admin' && (
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+                <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Create Queue</h2>
+                <form onSubmit={handleCreateQueue} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                    <input
+                      type="text"
+                      value={newQueueName}
+                      onChange={(e) => setNewQueueName(e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                    <textarea
+                      value={newQueueDescription}
+                      onChange={(e) => setNewQueueDescription(e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Create Queue
+                  </button>
+                </form>
+              </div>
+            )}
 
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
               <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Queues</h2>
