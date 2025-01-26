@@ -113,7 +113,7 @@ export async function listTickets() {
     queues: {
       id: string;
       name: string;
-    } | null;
+    }[];
   }
 
   interface Conversation {
@@ -139,7 +139,7 @@ export async function listTickets() {
       `);
 
     if (!queueError && qa) {
-      queueAssignments = qa;
+      queueAssignments = qa as QueueAssignment[];
     }
 
     // Try to get conversations separately
@@ -148,7 +148,7 @@ export async function listTickets() {
       .select('ticket_id, count');
 
     if (!convoError && conv) {
-      conversations = conv;
+      conversations = conv as Conversation[];
     }
   }
 
@@ -159,7 +159,7 @@ export async function listTickets() {
       .filter(qa => qa.ticket_id === ticket.id)
       .map(qa => ({
         queue_id: qa.queue_id,
-        queues: qa.queues
+        queues: qa.queues?.[0] || null
       })) || [],
     conversations: conversations
       .filter(c => c.ticket_id === ticket.id)
