@@ -86,17 +86,12 @@ export async function listTickets() {
   }
 
   const userRole = session.user.user_metadata.role;
+
+  // First, get the tickets with basic info
   let query = client
     .from('tickets')
     .select(`
       *,
-      conversations (count),
-      queue_assignments (
-        queue_id,
-        queues (
-          name
-        )
-      ),
       assigned_to_user:users!tickets_assigned_to_fkey (
         full_name
       )
@@ -106,13 +101,45 @@ export async function listTickets() {
     query = query.eq('created_by', session.user.id);
   }
 
-  const { data, error } = await query.order('created_at', { ascending: false });
+  const { data: tickets, error: ticketsError } = await query.order('created_at', { ascending: false });
 
-  if (error) {
-    return { error: { message: error.message } };
+  if (ticketsError) {
+    return { error: { message: ticketsError.message } };
   }
 
-  return { data };
+  // Then, try to get queue assignments separately
+  const { data: queueAssignments, error: queueError } = await client
+    .from('queue_assignments')
+    .select(`
+      ticket_id,
+      queue_id,
+      queues (
+        name
+      )
+    `);
+
+  // And conversations separately
+  const { data: conversations, error: convoError } = await client
+    .from('conversations')
+    .select('ticket_id, count');
+
+  // Combine the data
+  const enrichedTickets = tickets?.map(ticket => ({
+    ...ticket,
+    queue_assignments: queueAssignments
+      ?.filter(qa => qa.ticket_id === ticket.id)
+      .map(qa => ({
+        queue_id: qa.queue_id,
+        queues: qa.queues
+      })) || [],
+    conversations: conversations
+      ?.filter(c => c.ticket_id === ticket.id)
+      .map(c => ({
+        count: c.count
+      })) || []
+  }));
+
+  return { data: enrichedTickets };
 }
 
 export async function updateTicket(id: number, updates: Partial<Ticket>) {
