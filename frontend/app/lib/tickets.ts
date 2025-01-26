@@ -107,33 +107,62 @@ export async function listTickets() {
     return { error: { message: ticketsError.message } };
   }
 
-  // Then, try to get queue assignments separately
-  const { data: queueAssignments, error: queueError } = await client
-    .from('queue_assignments')
-    .select(`
-      ticket_id,
-      queue_id,
-      queues (
-        name
-      )
-    `);
+  interface QueueAssignment {
+    ticket_id: string;
+    queue_id: string;
+    queues: {
+      id: string;
+      name: string;
+    } | null;
+  }
 
-  // And conversations separately
-  const { data: conversations, error: convoError } = await client
-    .from('conversations')
-    .select('ticket_id, count');
+  interface Conversation {
+    ticket_id: string;
+    count: number;
+  }
+
+  let queueAssignments: QueueAssignment[] = [];
+  let conversations: Conversation[] = [];
+
+  // Only fetch queue assignments and conversations for workers and admins
+  if (userRole === 'worker' || userRole === 'admin') {
+    // Try to get queue assignments separately
+    const { data: qa, error: queueError } = await client
+      .from('queue_assignments')
+      .select(`
+        ticket_id,
+        queue_id,
+        queues (
+          id,
+          name
+        )
+      `);
+
+    if (!queueError && qa) {
+      queueAssignments = qa;
+    }
+
+    // Try to get conversations separately
+    const { data: conv, error: convoError } = await client
+      .from('conversations')
+      .select('ticket_id, count');
+
+    if (!convoError && conv) {
+      conversations = conv;
+    }
+  }
 
   // Combine the data
   const enrichedTickets = tickets?.map(ticket => ({
     ...ticket,
     queue_assignments: queueAssignments
-      ?.filter(qa => qa.ticket_id === ticket.id)
+      .filter(qa => qa.ticket_id === ticket.id)
       .map(qa => ({
         queue_id: qa.queue_id,
         queues: qa.queues
       })) || [],
     conversations: conversations
-      ?.filter(c => c.ticket_id === ticket.id)
+      .filter(c => c.ticket_id === ticket.id)
       .map(c => ({
         count: c.count
       })) || []
