@@ -15,7 +15,7 @@ CREATE TABLE public.queues (
 CREATE TABLE public.queue_assignments (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   queue_id uuid REFERENCES public.queues(id) ON DELETE CASCADE NOT NULL,
-  ticket_id uuid REFERENCES public.tickets(id) ON DELETE CASCADE NOT NULL,
+  ticket_id uuid REFERENCES tickets(id) ON DELETE CASCADE NOT NULL,
   assigned_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   assigned_by uuid REFERENCES auth.users(id) NOT NULL,
   UNIQUE(queue_id, ticket_id)
