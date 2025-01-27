@@ -36,14 +36,19 @@ export async function signInUser(
   password: string,
   client: typeof supabase = createSupabaseClient()
 ) {
+  console.log(`Attempting to sign in user with email: ${email}`);
+
   const { data, error } = await client.auth.signInWithPassword({
     email,
     password
   });
 
   if (error) {
+    console.error(`Error signing in user with email: ${email}`, error);
     return { user: null, error };
   }
+
+  console.log(`Successfully signed in user with email: ${email}`);
 
   return { user: data.user, error: null };
 }
@@ -59,11 +64,11 @@ export async function getCurrentUser(
   client: typeof supabase = createSupabaseClient()
 ) {
   const { data: { session }, error } = await client.auth.getSession();
-  
+
   if (error || !session) {
     return { user: null, error: error || { message: 'No session found' } };
   }
-  
+
   return { user: session.user, error: null };
 }
 
