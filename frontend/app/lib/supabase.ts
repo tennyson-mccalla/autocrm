@@ -11,9 +11,8 @@ console.log('Initializing Supabase client with:', {
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
+    autoRefreshToken: false,
+    detectSessionInUrl: false
   },
 });
