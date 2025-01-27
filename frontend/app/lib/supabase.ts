@@ -10,12 +10,13 @@ console.log('Initializing Supabase client with:', {
 });
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+  db: {
+    schema: 'public'
+  },
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'implicit',
-    storageKey: 'supabase-auth-token',
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    flowType: 'pkce'
   },
 });
