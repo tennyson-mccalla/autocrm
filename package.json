@@ -1,11 +1,11 @@
 {
   "name": "autocrm",
   "private": true,
-  "workspaces": [
-    "frontend"
-  ],
   "scripts": {
-    "prepare": "husky"
+    "prepare": "cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm start",
+    "dev": "cd frontend && npm run dev"
   },
   "devDependencies": {
     "husky": "^9.1.7"
