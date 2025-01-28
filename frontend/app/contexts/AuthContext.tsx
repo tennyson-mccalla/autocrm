@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { signInUser } from '../lib/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -51,20 +52,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { user, error } = await signInUser(email, password);
 
     if (error) {
       throw error;
     }
 
-    if (!data?.session) {
+    if (!user) {
       throw new Error('No session established after sign in');
     }
 
-    setUser(data.session.user);
+    setUser(user);
   };
 
   const signOut = async () => {
