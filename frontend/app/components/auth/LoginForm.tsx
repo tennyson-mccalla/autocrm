@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
+// Development-only logging helper
+const logAuthEvent = (message: string) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(message);
+  }
+};
+
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,7 +21,7 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (user) {
-      console.log('User state updated, redirecting to tickets');
+      logAuthEvent('User state updated, redirecting to tickets');
       router.push('/tickets');
     }
   }, [user, router]);
@@ -25,11 +32,8 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log('Attempting to sign in with:', email);
       await signIn(email, password);
-      console.log('Sign in successful');
     } catch (err) {
-      console.error('Sign in error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign in');
     } finally {
       setIsLoading(false);

@@ -4,6 +4,13 @@ import type { Database } from '../types/supabase';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+// Development-only logging helper
+const logAuthEvent = (message: string) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(message);
+  }
+};
+
 export function createSupabaseClient() {
   return supabase;
 }
@@ -36,20 +43,18 @@ export async function signInUser(
   password: string,
   client: typeof supabase = createSupabaseClient()
 ) {
-  console.log(`Attempting to sign in user with email: ${email}`);
-
+  logAuthEvent(`Attempting to sign in user with email: ${email}`);
   const { data, error } = await client.auth.signInWithPassword({
     email,
-    password
+    password,
   });
 
   if (error) {
-    console.error(`Error signing in user with email: ${email}`, error);
+    logAuthEvent(`Failed to sign in user with email: ${email}`);
     return { user: null, error };
   }
 
-  console.log(`Successfully signed in user with email: ${email}`);
-
+  logAuthEvent(`Successfully signed in user with email: ${email}`);
   return { user: data.user, error: null };
 }
 
