@@ -27,14 +27,34 @@ yarn-error.log*
 .env.*
 .env*.local
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Supabase
+supabase/.branches
+supabase/.temp
+supabase/.env
 
 # IDE
 .idea
 .vscode
 .vercel
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+
+# Build output
+dist
+build
+.next
+
+# System files
+.DS_Store
+Thumbs.db
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
 # Development artifacts
 dev-logs/

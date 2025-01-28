@@ -1,3 +1,34 @@
 #!/bin/sh
-echo "Running pre-commit checks..."
-exit 0
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run Gitleaks
+if command -v gitleaks > /dev/null 2>&1; then
+    echo "Running Gitleaks scan..."
+    gitleaks protect --staged -v || {
+        echo "❌ Gitleaks found potential secrets in your changes."
+        echo "Please remove any sensitive information before committing."
+        exit 1
+    }
+else
+    echo "⚠️  Warning: Gitleaks not found. Install with: brew install gitleaks"
+fi
+
+# Check for .env files
+if git diff --cached --name-only | grep -E '\.env$|\.env\.|.*_key.*|.*password.*|.*secret.*' > /dev/null; then
+    echo "❌ Attempting to commit files that might contain secrets:"
+    git diff --cached --name-only | grep -E '\.env$|\.env\.|.*_key.*|.*password.*|.*secret.*'
+    echo "Please remove sensitive files from commit"
+    exit 1
+fi
+
+# Check for large files (>5MB)
+if git diff --cached --name-only | xargs ls -l 2>/dev/null | awk '{if($5>5000000) print $9}' | grep . > /dev/null; then
+    echo "❌ Attempting to commit large files:"
+    git diff --cached --name-only | xargs ls -l | awk '{if($5>5000000) print $9}'
+    echo "Please remove large files from commit"
+    exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"

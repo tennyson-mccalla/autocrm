@@ -1,135 +1,107 @@
 # AutoCRM
 
-A modern customer relationship management system built with Next.js and Supabase.
+A modern customer relationship management system built with Next.js and Supabase, designed for efficient ticket management and customer support.
 
 ## Features
 
-- 🎫 **Ticket Management**: Create and track support tickets
-- 👥 **Role-Based Access**: Different views for customers and workers
-- 🔒 **Secure Authentication**: Built-in authentication with Supabase
-- 📱 **Responsive Design**: Works on desktop and mobile devices
+- 🎫 **Ticket Management**: Create, track, and manage support tickets with customizable queues and states
+- 👥 **Role-Based Access**: Separate interfaces for customers, workers, and administrators
+- 💬 **Conversation Threading**: Threaded conversations for each ticket
+- 🔒 **Secure Authentication**: Powered by Supabase Auth
+- 📱 **Responsive Design**: Modern UI that works seamlessly across all devices
+- 📊 **Dashboard Analytics**: Track ticket metrics and team performance
+- 🔍 **Advanced Search**: Full-text search across tickets and conversations
+
+## Project Structure
+
+```
+├── frontend/           # Next.js frontend application
+├── backend/           # Python backend for additional services
+├── supabase/         # Supabase configurations and migrations
+├── scripts/          # Utility scripts for development
+└── docs/            # Project documentation
+```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 16+
+- Node.js 18+
 - npm or yarn
-- Supabase account and project
+- Supabase CLI
+- Python 3.9+ (for backend services)
 
-### Installation
+### Local Development Setup
 
-1. Clone the repository:
+1. Clone and install dependencies:
 ```bash
 git clone https://github.com/yourusername/AutoCRM.git
 cd AutoCRM
+cd frontend && npm install
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up environment variables:
+2. Set up environment variables:
 ```bash
 cp .env.example .env.local
 ```
-Edit `.env.local` with your Supabase credentials:
+
+Required environment variables:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_service_key  # For admin operations
 ```
 
-4. Run the development server:
+3. Start Supabase locally:
+```bash
+supabase start
+```
+
+4. Run migrations:
+```bash
+supabase migration up
+```
+
+5. Start the development server:
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
-### Running Tests
+## Development Guidelines
+
+- All sensitive information must be stored in environment variables
+- Pre-commit hooks are in place to prevent committing sensitive data
+- Follow the established code style and TypeScript conventions
+- Write tests for new features
+
+## Testing
 
 ```bash
-# Run all tests
-npm test
+# Run frontend tests
+cd frontend && npm test
 
-# Run specific test suites
-npm test tests/features/ticket-listing.test.tsx
-npm test tests/api/ticket-creation.test.ts
+# Run E2E tests
+npm run test:e2e
 ```
-
-## Project Structure
-
-```
-AutoCRM/
-├── src/
-│   ├── components/    # React components
-│   ├── contexts/      # Context providers
-│   ├── lib/          # Utility functions and API
-│   └── pages/        # Next.js pages
-├── tests/
-│   ├── api/          # API tests
-│   ├── features/     # Feature tests
-│   └── mocks/        # Test mocks
-└── docs/            # Documentation
-```
-
-## Documentation
-
-- [Ticket Creation & Customer Interface](docs/ticket_creation_customer_interface.md)
 
 ## Screenshots
 
-### Ticket Creation Form
-![Ticket Creation Form](docs/images/ticket-creation-form.png)
+![Ticket Listing](images/ticket-listing.png)
+*Ticket management interface*
 
-### Ticket Listing
-![Ticket Listing](docs/images/ticket-listing.png)
-
-## Future Enhancements
-
-1. **Authentication Improvements**
-   - Password reset functionality
-   - Email verification
-   - Session refresh mechanism
-   - Rate limiting for auth endpoints
-
-2. **Ticket System Enhancements**
-   - File attachments for tickets
-   - Ticket categories/tags
-   - Ticket assignment to specific workers
-   - SLA tracking and notifications
-   - Ticket status change history
-
-3. **User Experience**
-   - Real-time updates for ticket status changes
-   - Email notifications for ticket updates
-   - Rich text editor for ticket descriptions
-   - Ticket search and advanced filtering
-   - Bulk actions for tickets
-
-4. **Admin Features**
-   - User management dashboard
-   - System-wide analytics
-   - Custom ticket fields configuration
-   - Role and permission management
-   - Audit logging
-
-5. **Integration Possibilities**
-   - Slack/Discord notifications
-   - Calendar integration for scheduling
-   - Knowledge base integration
-   - Customer satisfaction surveys
-   - Export functionality for reporting
+![Ticket Creation](images/ticket-creation-form.png)
+*Create new support tickets*
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create your feature branch
+3. Commit your changes (ensure pre-commit hooks pass)
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -1,0 +1,26 @@
+# Gitleaks configuration file
+
+title = "AutoCRM Gitleaks Configuration"
+
+[allowlist]
+paths = [
+    '''node_modules''',
+    '''package-lock.json''',
+    '''yarn.lock''',
+    '''__snapshots__''',
+    '''coverage''',
+    '''dist''',
+    '''build'''
+]
+
+# Don't scan test files for false positives
+regexes = [
+    '''test''',
+    '''spec''',
+]
+
+# Sample test data in documentation
+files = [
+    '''(.*?)(jpg|gif|doc|pdf|bin)$''',
+    '''(.*?)(test|spec)\.ts$'''
+]
