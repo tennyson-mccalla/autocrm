@@ -1,16 +1,13 @@
 {
-  "devDependencies": {
-    "autoprefixer": "^10.4.20",
-    "husky": "^9.1.7",
-    "postcss": "^8.5.1",
-    "tailwindcss": "^4.0.0"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.48.1",
-    "dotenv": "^16.4.7",
-    "node-fetch": "^3.3.2"
-  },
+  "name": "autocrm",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
     "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
