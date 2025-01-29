@@ -7,6 +7,7 @@ import { getTicket, Ticket } from '@/app/lib/tickets';
 import QueueSelector from '@/app/components/tickets/QueueSelector';
 import AssignTicket from '@/app/components/tickets/AssignTicket';
 import ConversationSection from '@/app/components/tickets/ConversationSection';
+import { TicketContext } from '@/app/types/llm-responses';
 
 export default function TicketPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -50,6 +51,16 @@ export default function TicketPage({ params }: { params: { id: string } }) {
   if (!ticket) {
     return <div>Ticket not found</div>;
   }
+
+  // Convert Ticket to TicketContext for AI suggestions
+  const ticketContext: TicketContext = {
+    id: ticket.id,
+    title: ticket.title,
+    description: ticket.description,
+    status: ticket.status,
+    priority: ticket.priority,
+    customerEmail: ticket.created_by, // Using created_by as customer email for now
+  };
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -101,7 +112,7 @@ export default function TicketPage({ params }: { params: { id: string } }) {
           </div>
 
           {/* Conversation Section */}
-          <ConversationSection ticketId={ticket.id} />
+          <ConversationSection ticketId={ticket.id} ticket={ticketContext} />
         </div>
       </div>
     </div>

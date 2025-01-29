@@ -2,16 +2,20 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { createSupabaseClient } from '../../lib/auth';
 import type { Conversation } from '../../types';
+import ResponseSuggestion from './ResponseSuggestion';
+import type { TicketContext } from '@/app/types/llm-responses';
 
 interface ConversationSectionProps {
   ticketId: string;
+  ticket: TicketContext;  // Add ticket prop for AI suggestions
 }
 
-export default function ConversationSection({ ticketId }: ConversationSectionProps) {
+export default function ConversationSection({ ticketId, ticket }: ConversationSectionProps) {
   const [messages, setMessages] = useState<Conversation[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showSuggestion, setShowSuggestion] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -68,6 +72,11 @@ export default function ConversationSection({ ticketId }: ConversationSectionPro
     }
   }
 
+  const handleSuggestionSelect = (suggestion: string) => {
+    setNewMessage(suggestion);
+    setShowSuggestion(false);
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-4">
@@ -118,6 +127,38 @@ export default function ConversationSection({ ticketId }: ConversationSectionPro
       </div>
 
       <form onSubmit={handleSendMessage} className="mt-4">
+        <div className="flex items-center justify-between mb-2">
+          <button
+            type="button"
+            onClick={() => setShowSuggestion(!showSuggestion)}
+            className="text-blue-600 hover:text-blue-700 text-sm flex items-center"
+          >
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
+            {showSuggestion ? 'Hide AI Suggestion' : 'Get AI Suggestion'}
+          </button>
+        </div>
+
+        {showSuggestion && (
+          <div className="mb-4">
+            <ResponseSuggestion
+              ticket={ticket}
+              onSuggestionSelect={handleSuggestionSelect}
+            />
+          </div>
+        )}
+
         <textarea
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
