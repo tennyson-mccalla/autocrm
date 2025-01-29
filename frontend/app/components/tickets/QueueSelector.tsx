@@ -16,7 +16,7 @@ export default function QueueSelector({ ticketId }: { ticketId: string }) {
           getQueueAssignments(ticketId)
         ]);
         setQueues(queuesList || []);
-        setCurrentAssignments((assignments || []).map((a: { assigned_to: string }) => a.assigned_to));
+        setCurrentAssignments((assignments || []).map(a => a.queue_id));
       } catch (error) {
         console.error('Error loading queues:', error);
       } finally {
@@ -28,10 +28,12 @@ export default function QueueSelector({ ticketId }: { ticketId: string }) {
 
   async function handleQueueToggle(queueId: string) {
     try {
-      if (!currentAssignments.includes(queueId)) {
-        await assignTicketToQueue(ticketId, queueId);
-        setCurrentAssignments(prev => [...prev, queueId]);
-      }
+      await assignTicketToQueue(ticketId, queueId);
+      setCurrentAssignments(prev =>
+        prev.includes(queueId)
+          ? prev.filter(id => id !== queueId)
+          : [...prev, queueId]
+      );
     } catch (error) {
       console.error('Error updating queue assignment:', error);
     }

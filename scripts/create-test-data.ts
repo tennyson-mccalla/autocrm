@@ -7,7 +7,14 @@ dotenv.config({ path: path.resolve(__dirname, '../frontend/.env.local') });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false
+    }
+  }
 );
 
 const TEST_USERS = [
@@ -92,116 +99,124 @@ const TEST_TICKETS = [
 ];
 
 async function createTestData() {
-  // Check for existing users first
-  console.log('Checking for existing users...');
-  const { data: existingUsers, error: usersError } = await supabase
-    .from('users')
-    .select('email')
-    .in('email', TEST_USERS.map(u => u.email));
+  try {
+    console.log('Creating test queues...');
 
-  if (usersError) {
-    console.error('Error checking existing users:', usersError.message);
-    return;
-  }
+    // Create queues
+    const { data: queues, error: queuesError } = await supabase
+      .from('queues')
+      .insert([
+        {
+          name: 'General Support',
+          description: 'General customer support inquiries'
+        },
+        {
+          name: 'Technical Issues',
+          description: 'Technical problems and bugs'
+        },
+        {
+          name: 'Billing Support',
+          description: 'Billing and payment related issues'
+        }
+      ])
+      .select();
 
-  const existingEmails = new Set(existingUsers?.map(u => u.email));
-  console.log('Found existing users:', Array.from(existingEmails).join(', ') || 'none');
+    if (queuesError) throw queuesError;
+    console.log('Created queues:', queues);
 
-  // Create only non-existing users
-  for (const user of TEST_USERS) {
-    if (existingEmails.has(user.email)) {
-      console.log(`Skipping existing user: ${user.email}`);
-      continue;
-    }
-
-    console.log(`Creating new user: ${user.email}`);
-    const { data, error } = await supabase.auth.signUp({
-      email: user.email,
-      password: user.password,
-      options: {
-        data: { role: user.role }
-      }
-    });
-
-    if (error) {
-      console.error(`Error creating user ${user.email}:`, error.message);
-      continue;
-    }
-    console.log(`Successfully created user: ${user.email}`);
-
-    // Create user profile in users table
-    const { error: profileError } = await supabase
+    // Get user IDs
+    const { data: users, error: usersError } = await supabase
       .from('users')
-      .insert({
-        id: data.user!.id,
-        email: user.email,
-        role: user.role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+      .select('id, email, role');
 
-    if (profileError) {
-      console.error(`Error creating profile for ${user.email}:`, profileError.message);
-    } else {
-      console.log(`Successfully created profile for: ${user.email}`);
-    }
-  }
+    if (usersError) throw usersError;
 
-  // Sign in as customer to create tickets
-  const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({
-    email: 'customer@test.com',
-    password: 'Customer123!'
-  });
+    const charlie = users?.find(u => u.email === 'charlie@test.com');
+    const diana = users?.find(u => u.email === 'diana@test.com');
+    const alice = users?.find(u => u.email === 'alice@test.com');
+    const bob = users?.find(u => u.email === 'bob@test.com');
 
-  if (signInError) {
-    console.error('Error signing in as customer:', signInError.message);
-    return;
-  }
-
-  // Check for existing tickets with same titles
-  console.log('\nChecking for existing tickets...');
-  const { data: existingTickets, error: ticketsError } = await supabase
-    .from('tickets')
-    .select('title')
-    .in('title', TEST_TICKETS.map(t => t.title));
-
-  if (ticketsError) {
-    console.error('Error checking existing tickets:', ticketsError.message);
-    return;
-  }
-
-  const existingTitles = new Set(existingTickets?.map(t => t.title));
-  console.log('Found existing tickets:', Array.from(existingTitles).join(', ') || 'none');
-
-  // Create only non-existing tickets
-  console.log('\nCreating test tickets...');
-  for (const ticket of TEST_TICKETS) {
-    if (existingTitles.has(ticket.title)) {
-      console.log(`Skipping existing ticket: ${ticket.title}`);
-      continue;
+    if (!charlie || !diana || !alice || !bob) {
+      throw new Error('Required users not found');
     }
 
-    const { error } = await supabase
+    console.log('Creating test tickets...');
+
+    // Create tickets
+    const { data: tickets, error: ticketsError } = await supabase
       .from('tickets')
-      .insert([{
-        ...ticket,
-        created_by: signIn.user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }]);
+      .insert([
+        {
+          title: 'Unable to access account',
+          description: 'Getting 403 error when trying to log in',
+          status: 'new',
+          priority: 'high',
+          created_by: charlie.id,
+          assigned_to: alice.id
+        },
+        {
+          title: 'Billing inquiry',
+          description: 'Question about last month\'s invoice',
+          status: 'in_progress',
+          priority: 'medium',
+          created_by: diana.id,
+          assigned_to: bob.id
+        },
+        {
+          title: 'Feature request: Dark mode',
+          description: 'Would like dark mode option in dashboard',
+          status: 'resolved',
+          priority: 'low',
+          created_by: charlie.id,
+          assigned_to: alice.id
+        }
+      ])
+      .select();
 
-    if (error) {
-      console.error(`Error creating ticket "${ticket.title}":`, error.message);
-    } else {
-      console.log(`Created ticket: ${ticket.title}`);
+    if (ticketsError) throw ticketsError;
+    console.log('Created tickets:', tickets);
+
+    // Assign tickets to queues
+    if (queues && tickets) {
+      console.log('Creating queue assignments...');
+
+      const generalQueue = queues.find(q => q.name === 'General Support');
+      const techQueue = queues.find(q => q.name === 'Technical Issues');
+      const billingQueue = queues.find(q => q.name === 'Billing Support');
+
+      if (!generalQueue || !techQueue || !billingQueue) {
+        throw new Error('Required queues not found');
+      }
+
+      const { error: assignError } = await supabase
+        .from('queue_assignments')
+        .insert([
+          {
+            queue_id: generalQueue.id,
+            ticket_id: tickets[0].id,
+            assigned_by: alice.id
+          },
+          {
+            queue_id: techQueue.id,
+            ticket_id: tickets[0].id,
+            assigned_by: alice.id
+          },
+          {
+            queue_id: billingQueue.id,
+            ticket_id: tickets[1].id,
+            assigned_by: bob.id
+          }
+        ]);
+
+      if (assignError) throw assignError;
+      console.log('Created queue assignments');
     }
-  }
 
-  console.log('\nTest data creation completed!');
-  console.log('\nTest Users:');
-  console.log('Customer: customer@test.com / Customer123!');
-  console.log('Worker: worker@test.com / Worker123!');
-  console.log('Admin: admin@test.com / Admin123!');
+    console.log('All test data created successfully!');
+
+  } catch (error) {
+    console.error('Error creating test data:', error);
+  }
 }
 
 createTestData()

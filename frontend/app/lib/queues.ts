@@ -39,27 +39,43 @@ export async function getQueues() {
   return data;
 }
 
+export async function unassignTicketFromQueue(ticketId: string, queueId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('queue_assignments')
+      .delete()
+      .eq('ticket_id', ticketId)
+      .eq('queue_id', queueId);
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error removing queue assignment:', error);
+    throw error;
+  }
+}
+
 export async function assignTicketToQueue(ticketId: string, queueId: string) {
   try {
-    // First try to use the RPC function
+    // Check if assignment already exists
+    const { data: existingAssignment } = await supabase
+      .from('queue_assignments')
+      .select('*')
+      .eq('ticket_id', ticketId)
+      .eq('queue_id', queueId)
+      .single();
+
+    // If assignment exists, remove it (toggle off)
+    if (existingAssignment) {
+      return await unassignTicketFromQueue(ticketId, queueId);
+    }
+
+    // If no assignment exists, create one (toggle on)
     const { data, error } = await supabase
       .rpc('assign_ticket_to_queue', {
         _ticket_id: ticketId,
         _queue_id: queueId,
       });
-
-    // If we get a duplicate key error (409), the assignment already exists
-    if (error?.code === '23505') {
-      // Get the existing assignment
-      const { data: existingAssignment } = await supabase
-        .from('queue_assignments')
-        .select('*')
-        .eq('ticket_id', ticketId)
-        .eq('queue_id', queueId)
-        .single();
-
-      return existingAssignment;
-    }
 
     if (error) throw error;
     return data;

@@ -35,3 +35,11 @@ begin
   return v_assignment;
 end;
 $$;
+
+-- Add policy for deleting queue assignments
+create policy "Queue assignments are deletable by authenticated users"
+  on public.queue_assignments for delete
+  to authenticated
+  using (
+    (auth.jwt() ->> 'user_metadata')::jsonb ->> 'role' IN ('admin', 'worker')
+  );
