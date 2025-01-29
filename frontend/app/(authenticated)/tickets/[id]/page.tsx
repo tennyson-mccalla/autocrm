@@ -59,8 +59,7 @@ export default function TicketPage({ params }: { params: { id: string } }) {
     description: ticket.description,
     status: ticket.status,
     priority: ticket.priority,
-    category: ticket.category,
-    customerEmail: ticket.customer_email,
+    customerEmail: ticket.created_by, // Using created_by as customer email for now
   };
 
   return (
