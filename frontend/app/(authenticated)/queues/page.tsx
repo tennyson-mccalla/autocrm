@@ -22,6 +22,8 @@ export default function QueuesPage() {
   useEffect(() => {
     if (selectedQueue) {
       loadTickets(selectedQueue.id);
+    } else {
+      setTickets([]);
     }
   }, [selectedQueue]);
 
@@ -30,7 +32,7 @@ export default function QueuesPage() {
       if (user?.user_metadata.role === 'worker' || user?.user_metadata.role === 'admin') {
         try {
           const queueTickets = await getQueueTickets();
-          setTickets(queueTickets as Ticket[] || []);
+          setTickets(queueTickets);
           setError(null);
         } catch (err) {
           console.error('Error loading queue tickets:', err);
@@ -67,7 +69,7 @@ export default function QueuesPage() {
         return;
       }
       const data = await getTicketsInQueue(queueId);
-      setTickets(data as Ticket[] || []);
+      setTickets(data);
       setError(null);
     } catch (error) {
       console.error('Error loading tickets:', error);

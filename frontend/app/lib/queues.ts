@@ -83,7 +83,7 @@ export async function getQueueAssignments(ticketId: string) {
   return data;
 }
 
-export async function getTicketsInQueue(queueId: string) {
+export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
@@ -96,14 +96,15 @@ export async function getTicketsInQueue(queueId: string) {
         priority,
         created_by,
         assigned_to,
-        created_at
+        created_at,
+        updated_at
       )
     `)
     .eq('queue_id', queueId);
 
   if (error) {
     console.error('Error getting tickets in queue:', error);
-    return null;
+    return [];
   }
 
   // Remove duplicates and null entries
@@ -119,7 +120,7 @@ export async function getTicketsInQueue(queueId: string) {
   return uniqueTickets;
 }
 
-export async function getQueueTickets() {
+export async function getQueueTickets(): Promise<Ticket[]> {
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
@@ -132,13 +133,14 @@ export async function getQueueTickets() {
         priority,
         created_by,
         assigned_to,
-        created_at
+        created_at,
+        updated_at
       )
     `);
 
   if (error) {
     console.error('Error getting queue tickets:', error);
-    return null;
+    return [];
   }
 
   // Remove duplicates and null entries
