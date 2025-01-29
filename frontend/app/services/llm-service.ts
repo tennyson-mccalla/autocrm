@@ -1,9 +1,19 @@
 import OpenAI from 'openai';
 import { SuggestionRequest, SuggestionResponse, SuggestionError } from '../types/llm-responses';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client lazily to avoid build-time errors
+let openai: OpenAI | null = null;
+
+function getOpenAIClient() {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 const DEFAULT_SYSTEM_PROMPT = `You are a helpful customer service representative.
 Your goal is to provide clear, accurate, and helpful responses to customer inquiries.
@@ -16,7 +26,8 @@ export async function suggestResponse(
     const { ticketData, style = {} } = request;
     const { tone = 'professional', length = 'concise' } = style;
 
-    const completion = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    const completion = await client.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-4',
       messages: [
         { role: 'system', content: DEFAULT_SYSTEM_PROMPT },
