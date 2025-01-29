@@ -8,7 +8,7 @@ function getOpenAIClient() {
   if (!openai) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      throw new Error('OpenAI API key is not configured');
+      throw new Error('OpenAI API key is not configured. Please contact your administrator.');
     }
     openai = new OpenAI({ apiKey });
   }
