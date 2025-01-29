@@ -88,7 +88,7 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
     .from('queue_assignments')
     .select(`
       ticket_id,
-      tickets (
+      tickets:tickets (
         id,
         title,
         description,
@@ -112,8 +112,9 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
   // Extract and deduplicate tickets
   const ticketMap = new Map<string, Ticket>();
   data.forEach(assignment => {
-    if (assignment.tickets) {
-      ticketMap.set(assignment.tickets.id, assignment.tickets as Ticket);
+    const ticket = assignment.tickets as unknown as Ticket;
+    if (ticket?.id) {
+      ticketMap.set(ticket.id, ticket);
     }
   });
 
@@ -125,7 +126,7 @@ export async function getQueueTickets(): Promise<Ticket[]> {
     .from('queue_assignments')
     .select(`
       ticket_id,
-      tickets (
+      tickets:tickets (
         id,
         title,
         description,
@@ -148,8 +149,9 @@ export async function getQueueTickets(): Promise<Ticket[]> {
   // Extract and deduplicate tickets
   const ticketMap = new Map<string, Ticket>();
   data.forEach(assignment => {
-    if (assignment.tickets) {
-      ticketMap.set(assignment.tickets.id, assignment.tickets as Ticket);
+    const ticket = assignment.tickets as unknown as Ticket;
+    if (ticket?.id) {
+      ticketMap.set(ticket.id, ticket);
     }
   });
 
