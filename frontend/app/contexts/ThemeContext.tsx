@@ -12,6 +12,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 function shouldUseDarkMode(): boolean {
+  if (typeof window === 'undefined') return false;
+
   // Check if it's nighttime (between 6 PM and 6 AM)
   const hour = new Date().getHours();
   const isNightTime = hour < 6 || hour >= 18;
@@ -24,8 +26,16 @@ function shouldUseDarkMode(): boolean {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
+  const [mounted, setMounted] = useState(false);
+
+  // Handle initial mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     // Check if user has a saved preference
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
@@ -56,9 +66,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       mediaQuery.removeEventListener('change', handleChange);
       clearInterval(interval);
     };
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     // Update HTML class when theme changes
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -67,9 +79,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
     // Save preference
     localStorage.setItem('theme', theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const toggleTheme = () => {
+    if (!mounted) return;
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
