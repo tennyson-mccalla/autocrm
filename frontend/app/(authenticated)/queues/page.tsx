@@ -60,8 +60,12 @@ export default function QueuesPage() {
     }
   }
 
-  async function loadTickets(queueId: string) {
+  async function loadTickets(queueId: string | null) {
     try {
+      if (!queueId) {
+        setTickets([]);
+        return;
+      }
       const data = await getTicketsInQueue(queueId);
       setTickets(data || []);
       setError(null);
@@ -142,7 +146,7 @@ export default function QueuesPage() {
                 {queues.map((queue) => (
                   <button
                     key={queue.id}
-                    onClick={() => setSelectedQueue(queue)}
+                    onClick={() => setSelectedQueue(selectedQueue?.id === queue.id ? null : queue)}
                     className={`w-full text-left px-4 py-2 rounded ${
                       selectedQueue?.id === queue.id
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'

@@ -40,14 +40,33 @@ export async function getQueues() {
 }
 
 export async function assignTicketToQueue(ticketId: string, queueId: string) {
-  const { data, error } = await supabase
-    .rpc('assign_ticket_to_queue', {
-      _ticket_id: ticketId,
-      _queue_id: queueId,
-    });
+  try {
+    // First try to use the RPC function
+    const { data, error } = await supabase
+      .rpc('assign_ticket_to_queue', {
+        _ticket_id: ticketId,
+        _queue_id: queueId,
+      });
 
-  if (error) throw error;
-  return data;
+    // If we get a duplicate key error (409), the assignment already exists
+    if (error?.code === '23505') {
+      // Get the existing assignment
+      const { data: existingAssignment } = await supabase
+        .from('queue_assignments')
+        .select('*')
+        .eq('ticket_id', ticketId)
+        .eq('queue_id', queueId)
+        .single();
+
+      return existingAssignment;
+    }
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating queue assignment:', error);
+    throw error;
+  }
 }
 
 export async function getQueueAssignments(ticketId: string) {
@@ -68,7 +87,7 @@ export async function getTicketsInQueue(queueId: string) {
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
-      *,
+      ticket_id,
       tickets (
         id,
         title,
@@ -76,7 +95,8 @@ export async function getTicketsInQueue(queueId: string) {
         status,
         priority,
         created_by,
-        assigned_to
+        assigned_to,
+        created_at
       )
     `)
     .eq('queue_id', queueId);
@@ -86,14 +106,24 @@ export async function getTicketsInQueue(queueId: string) {
     return null;
   }
 
-  return data?.map(assignment => assignment.tickets);
+  // Remove duplicates and null entries
+  const tickets = data
+    ?.map(assignment => assignment.tickets)
+    .filter((ticket): ticket is NonNullable<typeof ticket> => ticket !== null);
+
+  // Remove duplicates by ticket ID
+  const uniqueTickets = Array.from(
+    new Map(tickets.map(ticket => [ticket.id, ticket])).values()
+  );
+
+  return uniqueTickets;
 }
 
 export async function getQueueTickets() {
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
-      *,
+      ticket_id,
       tickets (
         id,
         title,
@@ -101,7 +131,8 @@ export async function getQueueTickets() {
         status,
         priority,
         created_by,
-        assigned_to
+        assigned_to,
+        created_at
       )
     `);
 
@@ -110,5 +141,15 @@ export async function getQueueTickets() {
     return null;
   }
 
-  return data?.map(assignment => assignment.tickets);
+  // Remove duplicates and null entries
+  const tickets = data
+    ?.map(assignment => assignment.tickets)
+    .filter((ticket): ticket is NonNullable<typeof ticket> => ticket !== null);
+
+  // Remove duplicates by ticket ID
+  const uniqueTickets = Array.from(
+    new Map(tickets.map(ticket => [ticket.id, ticket])).values()
+  );
+
+  return uniqueTickets;
 }
