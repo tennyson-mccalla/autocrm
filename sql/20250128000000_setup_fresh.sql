@@ -1,5 +1,7 @@
 -- Create test users with proper defaults
 INSERT INTO auth.users (
+    id,
+    instance_id,
     email,
     encrypted_password,
     email_confirmed_at,
@@ -20,8 +22,10 @@ INSERT INTO auth.users (
 ) VALUES
 -- Admin user
 (
+    'a9b8c7d6-e5f4-4a3b-8c9d-1a2b3c4d5e6f',
+    (SELECT id FROM auth.instances LIMIT 1),
     'admin@test.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', -- password123
+    crypt('password123', gen_salt('bf')),
     now(),
     'authenticated',
     '{"role": "admin", "full_name": "Admin User"}'::jsonb,
@@ -40,11 +44,13 @@ INSERT INTO auth.users (
 ),
 -- Worker users
 (
+    '8f9c55da-5c13-4f28-9e4e-74a8c1834875',
+    (SELECT id FROM auth.instances LIMIT 1),
     'worker@test.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', -- password123
+    crypt('password123', gen_salt('bf')),
     now(),
     'authenticated',
-    '{"role": "worker", "full_name": "Test Worker"}'::jsonb,
+    '{"role": "worker", "full_name": "Alice Worker"}'::jsonb,
     '{"provider": "email", "providers": ["email"]}'::jsonb,
     'authenticated',
     now(),
@@ -59,11 +65,13 @@ INSERT INTO auth.users (
     false
 ),
 (
+    'b4c45d3a-7d2f-4b6c-9f24-60d0f6e7d723',
+    (SELECT id FROM auth.instances LIMIT 1),
     'worker2@test.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', -- password123
+    crypt('password123', gen_salt('bf')),
     now(),
     'authenticated',
-    '{"role": "worker", "full_name": "Second Worker"}'::jsonb,
+    '{"role": "worker", "full_name": "Bob Worker"}'::jsonb,
     '{"provider": "email", "providers": ["email"]}'::jsonb,
     'authenticated',
     now(),
@@ -79,11 +87,13 @@ INSERT INTO auth.users (
 ),
 -- Customer users
 (
+    'e5c6cf84-9c3d-4b63-8a7c-32d7c2941e12',
+    (SELECT id FROM auth.instances LIMIT 1),
     'customer@test.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', -- password123
+    crypt('password123', gen_salt('bf')),
     now(),
     'authenticated',
-    '{"role": "customer", "full_name": "Test Customer"}'::jsonb,
+    '{"role": "customer", "full_name": "Charlie Customer"}'::jsonb,
     '{"provider": "email", "providers": ["email"]}'::jsonb,
     'authenticated',
     now(),
@@ -98,11 +108,13 @@ INSERT INTO auth.users (
     false
 ),
 (
+    'f7d8e9a2-6b5c-4f3d-8e9f-1a2b3c4d5e6f',
+    (SELECT id FROM auth.instances LIMIT 1),
     'customer2@test.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', -- password123
+    crypt('password123', gen_salt('bf')),
     now(),
     'authenticated',
-    '{"role": "customer", "full_name": "Second Customer"}'::jsonb,
+    '{"role": "customer", "full_name": "Diana Customer"}'::jsonb,
     '{"provider": "email", "providers": ["email"]}'::jsonb,
     'authenticated',
     now(),
