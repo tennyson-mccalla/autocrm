@@ -110,7 +110,9 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
   // Remove duplicates and null entries
   const tickets = data
     ?.map(assignment => assignment.tickets)
-    .filter((ticket): ticket is NonNullable<typeof ticket> => ticket !== null);
+    .filter((ticket): ticket is Ticket => ticket !== null);
+
+  if (!tickets) return [];
 
   // Remove duplicates by ticket ID
   const uniqueTickets = Array.from(
@@ -146,7 +148,9 @@ export async function getQueueTickets(): Promise<Ticket[]> {
   // Remove duplicates and null entries
   const tickets = data
     ?.map(assignment => assignment.tickets)
-    .filter((ticket): ticket is NonNullable<typeof ticket> => ticket !== null);
+    .filter((ticket): ticket is Ticket => ticket !== null);
+
+  if (!tickets) return [];
 
   // Remove duplicates by ticket ID
   const uniqueTickets = Array.from(
