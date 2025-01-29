@@ -107,19 +107,17 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
     return [];
   }
 
-  // Remove duplicates and null entries
-  const tickets = data
-    ?.map(assignment => assignment.tickets)
-    .filter((ticket): ticket is Ticket => ticket !== null);
+  if (!data) return [];
 
-  if (!tickets) return [];
+  // Extract and deduplicate tickets
+  const ticketMap = new Map<string, Ticket>();
+  data.forEach(assignment => {
+    if (assignment.tickets) {
+      ticketMap.set(assignment.tickets.id, assignment.tickets as Ticket);
+    }
+  });
 
-  // Remove duplicates by ticket ID
-  const uniqueTickets = Array.from(
-    new Map(tickets.map(ticket => [ticket.id, ticket])).values()
-  );
-
-  return uniqueTickets;
+  return Array.from(ticketMap.values());
 }
 
 export async function getQueueTickets(): Promise<Ticket[]> {
@@ -145,17 +143,15 @@ export async function getQueueTickets(): Promise<Ticket[]> {
     return [];
   }
 
-  // Remove duplicates and null entries
-  const tickets = data
-    ?.map(assignment => assignment.tickets)
-    .filter((ticket): ticket is Ticket => ticket !== null);
+  if (!data) return [];
 
-  if (!tickets) return [];
+  // Extract and deduplicate tickets
+  const ticketMap = new Map<string, Ticket>();
+  data.forEach(assignment => {
+    if (assignment.tickets) {
+      ticketMap.set(assignment.tickets.id, assignment.tickets as Ticket);
+    }
+  });
 
-  // Remove duplicates by ticket ID
-  const uniqueTickets = Array.from(
-    new Map(tickets.map(ticket => [ticket.id, ticket])).values()
-  );
-
-  return uniqueTickets;
+  return Array.from(ticketMap.values());
 }
