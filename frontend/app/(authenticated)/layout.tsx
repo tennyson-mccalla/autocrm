@@ -18,6 +18,7 @@ export default function AuthenticatedLayout({
     }
   }, [user, router, isLoading]);
 
+  // Show loading state while checking auth
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -26,13 +27,11 @@ export default function AuthenticatedLayout({
     );
   }
 
+  // Don't render anything if not authenticated
   if (!user) {
     return null;
   }
 
-  return (
-    <div>
-      <main>{children}</main>
-    </div>
-  );
+  // Only render children if authenticated
+  return <>{children}</>;
 }
