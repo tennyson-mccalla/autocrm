@@ -32,6 +32,9 @@ export interface Ticket {
     };
   }>;
   conversation_count?: number;
+  assigned_to_user?: {
+    full_name: string;
+  };
 }
 
 export interface Conversation {
