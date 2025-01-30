@@ -16,8 +16,17 @@ function getOpenAIClient() {
 }
 
 const DEFAULT_SYSTEM_PROMPT = `You are a helpful customer service representative.
-Your goal is to provide clear, accurate, and helpful responses to customer inquiries.
-Keep responses professional and focused on resolving the customer's issue.`;
+Your goal is to provide clear, concise, and helpful responses to customer inquiries.
+Keep responses focused on addressing the customer's issue directly.
+For concise responses:
+- Skip formal greetings and signatures
+- Get straight to the point
+- Use simple, direct language
+- Keep it under 3-4 sentences
+For friendly responses:
+- Use a warm but professional tone
+- Show empathy but stay brief
+- Focus on solutions`;
 
 export async function suggestResponse(
   request: SuggestionRequest
@@ -33,17 +42,16 @@ export async function suggestResponse(
         { role: 'system', content: DEFAULT_SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `Please provide a ${tone}, ${length} response to the following customer ticket:
+          content: `Generate a ${tone}, ${length} response for ticket #${ticketData.id}:
 
-Title: ${ticketData.title}
-Description: ${ticketData.description}
+Issue: ${ticketData.title}
+Details: ${ticketData.description}
 Priority: ${ticketData.priority}
-Category: ${ticketData.category || 'N/A'}
 
-The response should be appropriate for an email reply to ${ticketData.customerEmail}.`
+Remember to be direct and solution-focused. No need for formal greetings or signatures.`
         }
       ],
-      max_tokens: parseInt(process.env.OPENAI_MAX_TOKENS || '500'),
+      max_tokens: parseInt(process.env.OPENAI_MAX_TOKENS || '250'),
       temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.7'),
     });
 

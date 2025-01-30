@@ -1,1 +1,9 @@
-BEGIN; INSERT INTO public.users (id, email) VALUES ('bf936844-074b-4893-a3e8-f4d6cc2086ad', 'customer1@test.com'), ('811ec6ba-3b1b-4e64-9617-2fd1fa009280', 'customer2@test.com'), ('26cc82e6-05ab-4ca4-8d23-e5baca0a7db8', 'customer3@test.com'), ('0a0a303c-935d-4582-9033-dd6623c7be09', 'worker1@test.com'), ('64be9255-2563-4810-a8d7-ed71b4fa044d', 'worker2@test.com') ON CONFLICT (id) DO NOTHING; UPDATE public.tickets SET created_by = 'bf936844-074b-4893-a3e8-f4d6cc2086ad' WHERE created_by = '30df8762-4f78-48aa-8dd6-cc3a0fffebe5' AND id IN (SELECT id FROM public.tickets WHERE created_by = '30df8762-4f78-48aa-8dd6-cc3a0fffebe5' LIMIT 20); UPDATE public.tickets SET created_by = '811ec6ba-3b1b-4e64-9617-2fd1fa009280' WHERE created_by = '30df8762-4f78-48aa-8dd6-cc3a0fffebe5' AND id IN (SELECT id FROM public.tickets WHERE created_by = '30df8762-4f78-48aa-8dd6-cc3a0fffebe5' LIMIT 20); UPDATE public.tickets SET created_by = '26cc82e6-05ab-4ca4-8d23-e5baca0a7db8' WHERE created_by = '30df8762-4f78-48aa-8dd6-cc3a0fffebe5' AND id IN (SELECT id FROM public.tickets WHERE created_by = '30df8762-4f78-48aa-8dd6-cc3a0fffebe5' LIMIT 20); SELECT created_by, COUNT(*) as ticket_count FROM public.tickets GROUP BY created_by; COMMIT;
+BEGIN;
+
+INSERT INTO public.users (id, email, metadata, created_at, updated_at) VALUES ('bb12933a-784a-4b7c-93d7-1daeb06d815f', 'agent@test.com', '{}'::jsonb, NOW(), NOW()) ON CONFLICT (id) DO NOTHING;
+
+UPDATE public.tickets SET assigned_to = 'bb12933a-784a-4b7c-93d7-1daeb06d815f' WHERE id = '6fa809a1-8116-455f-82d5-7eb2b711e7cf';
+
+SELECT COUNT(*), created_by FROM public.tickets GROUP BY created_by;
+
+COMMIT;
