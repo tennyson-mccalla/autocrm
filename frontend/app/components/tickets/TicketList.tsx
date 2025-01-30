@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import { listTickets, Ticket } from '../../lib/tickets';
+import { listTickets } from '../../lib/tickets';
+import { Ticket } from '../../types';
 import { Pagination } from '../common/Pagination';
 
 export function TicketList() {
