@@ -124,7 +124,7 @@ export async function listTickets() {
   let queueAssignments: QueueAssignment[] = [];
   let conversations: Conversation[] = [];
 
-  // Only fetch queue assignments and conversations for workers and admins
+  // Only fetch queue assignments for workers and admins
   if (userRole === 'worker' || userRole === 'admin') {
     try {
       // Try to get queue assignments separately
@@ -145,18 +145,23 @@ export async function listTickets() {
     } catch (error) {
       console.debug('Queue assignments not available:', error);
     }
+  }
 
-    try {
-      // Try to get conversations count per ticket
-      const { data: conv, error: convoError } = await client
-        .rpc('count_conversations_per_ticket');
+  // Fetch conversation counts for all users
+  try {
+    // Try to get conversations count per ticket
+    const { data: conv, error: convoError } = await client
+      .rpc('count_conversations_per_ticket');
 
-      if (!convoError && conv) {
-        conversations = conv as Conversation[];
-      }
-    } catch (error) {
-      console.debug('Conversations not available:', error);
+    console.log('Conversation counts:', conv);
+    console.log('Conversation error:', convoError);
+
+    if (!convoError && conv) {
+      conversations = conv as Conversation[];
+      console.log('Processed conversations:', conversations);
     }
+  } catch (error) {
+    console.error('Conversations error:', error);
   }
 
   // Combine the data
@@ -168,11 +173,7 @@ export async function listTickets() {
         queue_id: qa.queue_id,
         queues: qa.queues?.[0] || null
       })) || [],
-    conversations: conversations
-      .filter(c => c.ticket_id === ticket.id)
-      .map(c => ({
-        count: c.count
-      })) || []
+    conversation_count: conversations.find(c => c.ticket_id === ticket.id)?.count || 0
   }));
 
   return { data: enrichedTickets };
