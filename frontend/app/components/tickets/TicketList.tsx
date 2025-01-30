@@ -17,9 +17,6 @@ export function TicketList() {
 
   async function fetchTickets() {
     try {
-      setLoading(true);
-      setError(null);
-
       if (!user) {
         setError('Please sign in to view tickets');
         return;
@@ -32,24 +29,30 @@ export function TicketList() {
         return;
       }
 
-      setTickets(data || []);
+      // Only update state if there are actual changes
+      if (data) {
+        const hasChanges = JSON.stringify(data) !== JSON.stringify(tickets);
+        if (hasChanges) {
+          setTickets(data);
+        }
+      }
     } catch (err) {
       setError('Error loading tickets');
       console.error('Error loading tickets:', err);
-    } finally {
-      setLoading(false);
     }
   }
 
+  // Initial load with loading state
   useEffect(() => {
-    fetchTickets();
+    setLoading(true);
+    fetchTickets().finally(() => setLoading(false));
   }, [user]);
 
-  // Refresh tickets every 30 seconds
+  // Polling with no loading state
   useEffect(() => {
     const interval = setInterval(() => {
       if (user) fetchTickets();
-    }, 30000);
+    }, 10000); // Reduced to 10 seconds for better responsiveness
 
     return () => clearInterval(interval);
   }, [user]);
@@ -153,7 +156,7 @@ export function TicketList() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <span>{ticket.conversations?.[0]?.count || 0}</span>
+                <span>{ticket.conversation_count}</span>
               </div>
             </div>
 

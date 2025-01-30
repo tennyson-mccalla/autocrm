@@ -31,6 +31,7 @@ export interface Ticket {
       name: string;
     };
   }>;
+  conversation_count?: number;
 }
 
 export interface Conversation {
