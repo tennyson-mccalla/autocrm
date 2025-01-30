@@ -7,7 +7,7 @@ import type { TicketContext } from '@/app/types/llm-responses';
 
 interface ConversationSectionProps {
   ticketId: string;
-  ticket: TicketContext;  // Add ticket prop for AI suggestions
+  ticket: TicketContext;
 }
 
 export default function ConversationSection({ ticketId, ticket }: ConversationSectionProps) {
@@ -16,11 +16,42 @@ export default function ConversationSection({ ticketId, ticket }: ConversationSe
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showSuggestion, setShowSuggestion] = useState(false);
+  const [lastSuggestion, setLastSuggestion] = useState<string | null>(null);
+  const [lastSuggestionMetadata, setLastSuggestionMetadata] = useState<any | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
     loadMessages();
   }, [ticketId]);
+
+  const logSuggestion = async (data: any) => {
+    try {
+      // Get the auth token from localStorage
+      const token = localStorage.getItem('sb-localhost-auth-token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+      const parsedToken = JSON.parse(token);
+
+      const response = await fetch('/api/suggestions/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${parsedToken.access_token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Server error response:', errorData);
+        throw new Error('Failed to log suggestion');
+      }
+    } catch (error) {
+      console.error('Failed to log suggestion:', error);
+      // Don't throw error here, still allow the message to be sent
+    }
+  };
 
   async function loadMessages() {
     try {
@@ -53,7 +84,20 @@ export default function ConversationSection({ ticketId, ticket }: ConversationSe
 
     try {
       const client = createSupabaseClient();
-      const { error } = await client
+
+      // If this message was based on a suggestion, log any modifications
+      if (lastSuggestion) {
+        await logSuggestion({
+          ticketId: ticketId,
+          originalSuggestion: lastSuggestion,
+          finalMessage: newMessage.trim(),
+          wasUsed: true,
+          wasModified: lastSuggestion !== newMessage.trim(),
+          metadata: lastSuggestionMetadata
+        });
+      }
+
+      const { error: sendError } = await client
         .from('conversations')
         .insert({
           ticket_id: ticketId,
@@ -62,10 +106,12 @@ export default function ConversationSection({ ticketId, ticket }: ConversationSe
           internal_note: false
         });
 
-      if (error) throw error;
+      if (sendError) throw sendError;
 
       setNewMessage('');
-      loadMessages(); // Reload messages to show the new one
+      setLastSuggestion(null);
+      setLastSuggestionMetadata(null);
+      loadMessages();
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
@@ -74,6 +120,7 @@ export default function ConversationSection({ ticketId, ticket }: ConversationSe
 
   const handleSuggestionSelect = (suggestion: string) => {
     setNewMessage(suggestion);
+    setLastSuggestion(suggestion);
     setShowSuggestion(false);
   };
 
