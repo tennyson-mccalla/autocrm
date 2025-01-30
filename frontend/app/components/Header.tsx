@@ -6,37 +6,41 @@ import Link from 'next/link';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
         <div className="flex justify-between items-center h-full">
           <div className="flex items-center">
-            <Link href="/tickets" className="text-xl font-semibold text-gray-900 dark:text-white">
+            <Link href={user ? "/tickets" : "/"} className="text-xl font-semibold text-gray-900 dark:text-white">
               AutoCRM
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link
-              href="/tickets"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Tickets
-            </Link>
-            <Link
-              href="/tickets/new"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-            >
-              New Ticket
-            </Link>
-            <Link
-              href="/queues"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Queues
-            </Link>
+            {user && (
+              <>
+                <Link
+                  href="/tickets"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Tickets
+                </Link>
+                <Link
+                  href="/tickets/new"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  New Ticket
+                </Link>
+                <Link
+                  href="/queues"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Queues
+                </Link>
+              </>
+            )}
             <div className="flex items-center space-x-2">
               <button
                 onClick={toggleTheme}
@@ -53,15 +57,17 @@ export function Header() {
                   </svg>
                 )}
               </button>
-              <button
-                onClick={signOut}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-                aria-label="Sign out"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
+              {user && (
+                <button
+                  onClick={signOut}
+                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  aria-label="Sign out"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>
