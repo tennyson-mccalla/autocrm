@@ -21,7 +21,7 @@ export default function AuthenticatedLayout({
   // Show loading state while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
@@ -33,5 +33,9 @@ export default function AuthenticatedLayout({
   }
 
   // Only render children if authenticated
-  return <>{children}</>;
+  return (
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+      {children}
+    </div>
+  );
 }

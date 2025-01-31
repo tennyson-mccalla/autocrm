@@ -8,13 +8,19 @@ export function Header() {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
 
+  // Check if user is admin
+  const isAdmin = user?.user_metadata?.role === 'admin';
+  console.log('🎭 DEBUG: Header - User:', user?.email);
+  console.log('🎭 DEBUG: Header - User metadata:', user?.user_metadata);
+  console.log('🎭 DEBUG: Header - Is admin:', isAdmin);
+
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
         <div className="flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link href={user ? "/tickets" : "/"} className="text-xl font-semibold text-gray-900 dark:text-white">
-              AutoCRM
+              AutoCRM {isAdmin ? '(Admin)' : ''}
             </Link>
           </div>
 
@@ -39,6 +45,14 @@ export function Header() {
                 >
                   Queues
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/documents"
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Documents
+                  </Link>
+                )}
               </>
             )}
             <div className="flex items-center space-x-2">
