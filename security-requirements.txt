@@ -1,0 +1,4 @@
+# Security scanning tools
+trufflehog>=3.63.2
+detect-secrets>=1.4.0
+gitleaks>=8.18.1
