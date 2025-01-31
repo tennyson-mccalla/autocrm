@@ -61,6 +61,24 @@ export async function signInUser(
     return { user: null, error };
   }
 
+  // After successful sign in, check if user is admin and update metadata
+  if (data.user) {
+    const { data: isAdminData } = await client.rpc('is_admin', { user_id: data.user.id });
+    if (isAdminData) {
+      const { error: updateError } = await client.auth.updateUser({
+        data: { role: 'admin' }
+      });
+
+      if (updateError) {
+        logAuthEvent('Failed to update user role metadata', updateError);
+      } else {
+        logAuthEvent('Successfully updated user role metadata to admin');
+        // Update the user object with the new metadata
+        data.user.user_metadata = { ...data.user.user_metadata, role: 'admin' };
+      }
+    }
+  }
+
   logAuthEvent(`Successfully signed in user with email: ${email}`);
   return { user: data.user, error: null };
 }

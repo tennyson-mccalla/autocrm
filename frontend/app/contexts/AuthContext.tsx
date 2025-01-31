@@ -31,44 +31,114 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (!mounted) return;
+
       if (error) {
         logAuthEvent('Failed to get initial session', error);
+        setIsLoading(false);
         return;
       }
 
       if (session) {
         logAuthEvent(`Initial session found for user: ${session.user.email}`);
-        setUser(session.user);
+        logAuthEvent(`Initial metadata: ${JSON.stringify(session.user.user_metadata)}`);
+
+        // Check if user is admin and update metadata if needed
+        if (!session.user.user_metadata?.role) {
+          const { data: isAdminData } = await supabase.rpc('is_admin', { user_id: session.user.id });
+          if (isAdminData && mounted) {
+            const { data: userData, error: updateError } = await supabase.auth.updateUser({
+              data: { role: 'admin' }
+            });
+
+            if (updateError) {
+              logAuthEvent('Failed to update user role metadata', updateError);
+            } else {
+              logAuthEvent('Successfully updated user role metadata to admin');
+              logAuthEvent(`Updated metadata: ${JSON.stringify(userData.user.user_metadata)}`);
+              setUser(userData.user);
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+
+        if (mounted) {
+          setUser(session.user);
+        }
       } else {
         logAuthEvent('No initial session found');
-        setUser(null);
+        if (mounted) {
+          setUser(null);
+        }
       }
-      setIsLoading(false);
+
+      if (mounted) {
+        setIsLoading(false);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       logAuthEvent(`Auth state changed: ${event}`);
+      logAuthEvent(`Session metadata: ${JSON.stringify(session?.user?.user_metadata)}`);
+
+      if (!mounted) return;
 
       // Only update user if there's an actual change
       if (session) {
-        setUser(prev => {
-          if (!prev || prev.id !== session.user.id) {
-            logAuthEvent(`User session updated: ${session.user.email}`);
-            return session.user;
+        setIsLoading(true);
+
+        // For sign in and user updates, check admin status
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          // Check if user is admin and update metadata if needed
+          if (!session.user.user_metadata?.role) {
+            const { data: isAdminData } = await supabase.rpc('is_admin', { user_id: session.user.id });
+            if (isAdminData && mounted) {
+              const { data: userData, error: updateError } = await supabase.auth.updateUser({
+                data: { role: 'admin' }
+              });
+
+              if (updateError) {
+                logAuthEvent('Failed to update user role metadata', updateError);
+              } else {
+                logAuthEvent('Successfully updated user role metadata to admin');
+                logAuthEvent(`Updated metadata: ${JSON.stringify(userData.user.user_metadata)}`);
+                setUser(userData.user);
+                setIsLoading(false);
+                return;
+              }
+            }
           }
-          return prev;
-        });
-      } else if (session === null) {
+        }
+
+        if (mounted) {
+          setUser(prev => {
+            if (!prev || prev.id !== session.user.id || JSON.stringify(prev.user_metadata) !== JSON.stringify(session.user.user_metadata)) {
+              logAuthEvent(`User session updated: ${session.user.email}`);
+              logAuthEvent(`User metadata: ${JSON.stringify(session.user.user_metadata)}`);
+              return session.user;
+            }
+            return prev;
+          });
+        }
+      } else if (session === null && mounted) {
         logAuthEvent('User session ended');
         setUser(null);
+      }
+
+      if (mounted) {
+        setIsLoading(false);
       }
     });
 
     return () => {
+      mounted = false;
       logAuthEvent('Cleaning up auth subscriptions');
       subscription.unsubscribe();
     };
@@ -88,6 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
 
+    logAuthEvent(`Sign in successful for: ${email}`);
+    logAuthEvent(`User role: ${user.user_metadata?.role}`);
     setUser(user);
   };
 
