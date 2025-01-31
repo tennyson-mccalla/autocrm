@@ -1,0 +1,92 @@
+/* Light mode styles */
+.wmde-markdown {
+  background-color: transparent !important;
+}
+
+/* Dark mode styles */
+:global(.dark) .wmde-markdown {
+  background-color: transparent !important;
+  color: #e5e7eb !important;
+}
+
+:global(.dark) .wmde-markdown h1,
+:global(.dark) .wmde-markdown h2,
+:global(.dark) .wmde-markdown h3,
+:global(.dark) .wmde-markdown h4,
+:global(.dark) .wmde-markdown h5,
+:global(.dark) .wmde-markdown h6 {
+  color: #f3f4f6 !important;
+  border-bottom-color: #374151 !important;
+}
+
+:global(.dark) .wmde-markdown code {
+  background-color: #374151 !important;
+  color: #e5e7eb !important;
+}
+
+:global(.dark) .wmde-markdown table {
+  border-color: #374151 !important;
+}
+
+:global(.dark) .wmde-markdown table tr {
+  background-color: transparent !important;
+  border-top-color: #374151 !important;
+}
+
+:global(.dark) .wmde-markdown table tr:nth-child(2n) {
+  background-color: #1f2937 !important;
+}
+
+:global(.dark) .wmde-markdown table th,
+:global(.dark) .wmde-markdown table td {
+  border-color: #374151 !important;
+}
+
+:global(.dark) .wmde-markdown blockquote {
+  color: #9ca3af !important;
+  border-left-color: #374151 !important;
+}
+
+:global(.dark) .wmde-markdown hr {
+  background-color: #374151 !important;
+}
+
+:global(.dark) .wmde-markdown a {
+  color: #60a5fa !important;
+}
+
+:global(.dark) .wmde-markdown a:hover {
+  color: #93c5fd !important;
+}
+
+/* SVG icon styles */
+:global(.dark) .wmde-markdown .octicon {
+  fill: #9ca3af !important;
+}
+
+:global(.dark) .wmde-markdown a:hover .octicon {
+  fill: #93c5fd !important;
+}
+
+/* List styles */
+:global(.dark) .wmde-markdown ul,
+:global(.dark) .wmde-markdown ol {
+  color: #e5e7eb !important;
+}
+
+/* Inline code */
+:global(.dark) .wmde-markdown code:not([class*="language-"]) {
+  background-color: #374151 !important;
+  color: #e5e7eb !important;
+  border-color: #4b5563 !important;
+}
+
+/* Table header */
+:global(.dark) .wmde-markdown thead tr {
+  background-color: #1f2937 !important;
+  border-bottom-color: #374151 !important;
+}
+
+:global(.dark) .wmde-markdown thead th {
+  color: #f3f4f6 !important;
+}
