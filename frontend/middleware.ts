@@ -3,12 +3,17 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
+  // Only initialize Supabase client for auth-related routes
+  if (request.nextUrl.pathname.startsWith('/api/auth') ||
+      request.nextUrl.pathname.startsWith('/auth') ||
+      request.nextUrl.pathname.startsWith('/api/rag')) {
+    const res = NextResponse.next();
+    const supabase = createMiddlewareClient({ req: request, res });
+    await supabase.auth.getSession();
+    return res;
+  }
 
-  await supabase.auth.getSession();
-
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {

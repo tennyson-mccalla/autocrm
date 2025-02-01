@@ -13,6 +13,11 @@ import { cookies } from 'next/headers';
 
 // Helper to check if user has required permissions
 async function checkPermissions(userId: string) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('Missing required environment variables');
+    return false;
+  }
+
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -31,6 +36,11 @@ async function checkPermissions(userId: string) {
 
 export async function POST(request: NextRequest) {
   console.log('RAG API: Received request');
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('RAG API: Missing required environment variables');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
 
   try {
     // Get the session
