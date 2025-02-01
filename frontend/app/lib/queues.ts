@@ -1,6 +1,6 @@
 import { Database } from '../types/supabase';
 import { Ticket } from './tickets';
-import { supabase } from '../lib/supabase';
+import { getSupabaseClient } from './supabase/client';
 
 export type Queue = {
   id: string;
@@ -19,6 +19,7 @@ export type QueueAssignment = {
 };
 
 export async function createQueue(name: string, description?: string) {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('queues')
     .insert([{ name, description }])
@@ -30,6 +31,7 @@ export async function createQueue(name: string, description?: string) {
 }
 
 export async function getQueues() {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('queues')
     .select('*')
@@ -40,6 +42,7 @@ export async function getQueues() {
 }
 
 export async function unassignTicketFromQueue(ticketId: string, queueId: string) {
+  const supabase = getSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('queue_assignments')
@@ -56,6 +59,7 @@ export async function unassignTicketFromQueue(ticketId: string, queueId: string)
 }
 
 export async function assignTicketToQueue(ticketId: string, queueId: string) {
+  const supabase = getSupabaseClient();
   try {
     // Check if assignment already exists
     const { data: existingAssignment } = await supabase
@@ -86,6 +90,7 @@ export async function assignTicketToQueue(ticketId: string, queueId: string) {
 }
 
 export async function getQueueAssignments(ticketId: string) {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('queue_assignments')
     .select('*')
@@ -100,6 +105,7 @@ export async function getQueueAssignments(ticketId: string) {
 }
 
 export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`
@@ -138,6 +144,7 @@ export async function getTicketsInQueue(queueId: string): Promise<Ticket[]> {
 }
 
 export async function getQueueTickets(): Promise<Ticket[]> {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('queue_assignments')
     .select(`

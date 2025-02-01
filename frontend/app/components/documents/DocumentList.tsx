@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DocumentType } from '@/app/types/documents';
-import { supabase, getCurrentSession } from '@/app/lib/supabase';
+import { getSupabaseSession } from '@/app/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 interface Document {
@@ -27,7 +27,7 @@ export default function DocumentList() {
 
   useEffect(() => {
     // Get initial session
-    getCurrentSession().then(session => {
+    getSupabaseSession().then(session => {
       setSession(session);
     });
   }, []);
@@ -65,7 +65,7 @@ export default function DocumentList() {
 
   const handleAddNewDocument = async () => {
     try {
-      const currentSession = await getCurrentSession();
+      const currentSession = await getSupabaseSession();
       if (!currentSession) {
         setError('Please sign in to create documents');
         return;

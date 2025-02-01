@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from './supabase/client';
+import { SupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '../types/supabase';
 import { createSupabaseClient } from './auth';
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RAGService } from '@/app/lib/rag/services/ragService';
-import { getSupabaseUser, getSupabaseSession } from '@/app/lib/supabase';
+import { getSupabaseServerUser, getSupabaseServerSession, getSupabaseServerClient } from '@/app/lib/supabase/server';
 
 /**
  * RAG API Route Handler
@@ -13,7 +13,7 @@ import { getSupabaseUser, getSupabaseSession } from '@/app/lib/supabase';
 // Helper to check if user has required permissions
 async function checkPermissions(userId: string) {
   try {
-    const { data: { user }, error } = await getSupabaseUser();
+    const { data: { user }, error } = await getSupabaseServerUser();
 
     if (error || !user) {
       console.error('Error getting user:', error);
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Get the session
-    const { data: { session }, error: sessionError } = await getSupabaseSession();
+    const { data: { session }, error: sessionError } = await getSupabaseServerSession();
 
     if (sessionError) {
       console.error('RAG API: Session error:', sessionError);
@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
         console.log('RAG API: Processing document:', documentId);
 
         // Get the document
+        const supabase = await getSupabaseServerClient();
         const { data: document, error: docError } = await supabase
           .from('documents')
           .select('*')

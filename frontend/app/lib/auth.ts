@@ -1,5 +1,6 @@
-import { supabase } from './supabase';
+import { getSupabaseClient } from './supabase/client';
 import type { Database } from '../types/supabase';
+import { SupabaseClient } from '@supabase/auth-helpers-nextjs';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -16,7 +17,7 @@ const logAuthEvent = (message: string, error?: any) => {
 };
 
 export function createSupabaseClient() {
-  return supabase;
+  return getSupabaseClient();
 }
 
 type UserRole = 'admin' | 'worker' | 'customer';
@@ -25,7 +26,7 @@ export async function signUpUser(
   email: string,
   password: string,
   role: UserRole,
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   logAuthEvent(`Attempting to create new user with email: ${email} and role: ${role}`);
   const { data, error } = await client.auth.signUp({
@@ -48,7 +49,7 @@ export async function signUpUser(
 export async function signInUser(
   email: string,
   password: string,
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   logAuthEvent(`Attempting to sign in user with email: ${email}`);
   const { data, error } = await client.auth.signInWithPassword({
@@ -84,7 +85,7 @@ export async function signInUser(
 }
 
 export async function signOutUser(
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   logAuthEvent('Attempting to sign out user');
   const { error } = await client.auth.signOut();
@@ -99,7 +100,7 @@ export async function signOutUser(
 }
 
 export async function getCurrentUser(
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   logAuthEvent('Checking current session');
   const { data: { session }, error } = await client.auth.getSession();
@@ -120,7 +121,7 @@ export async function getCurrentUser(
 
 export async function getUserProfile(
   userId: string,
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   if (!userId) {
     logAuthEvent('Profile lookup attempted without user ID');
@@ -169,7 +170,7 @@ export async function getUserProfile(
 }
 
 export async function listAllUsers(
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError || !session) {
@@ -198,7 +199,7 @@ export async function updateUserProfile(
     full_name?: string;
     metadata?: Record<string, any>;
   },
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   logAuthEvent(`Attempting to update profile for user ID: ${userId}`);
   const { data: { session }, error: sessionError } = await client.auth.getSession();
@@ -254,7 +255,7 @@ export async function updateUserProfile(
 export async function updateUserRole(
   userId: string,
   newRole: UserRole,
-  client: typeof supabase = createSupabaseClient()
+  client: SupabaseClient = createSupabaseClient()
 ) {
   logAuthEvent(`Attempting to update role to ${newRole} for user ID: ${userId}`);
   const { data: { session }, error: sessionError } = await client.auth.getSession();

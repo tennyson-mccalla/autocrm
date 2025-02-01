@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getSupabaseClient, getSupabaseUser } from '@/app/lib/supabase/client';
 import type { User } from '@supabase/auth-helpers-nextjs';
+import type { AuthError } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
 // Development-only logging helper
 const logAuthEvent = (message: string, error?: AuthError) => {
@@ -37,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -71,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    const supabase = getSupabaseClient();
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -82,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    const supabase = getSupabaseClient();
     const { error } = await supabase.auth.signOut();
     if (error) {
       throw error;
@@ -90,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    const supabase = getSupabaseClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
       throw error;

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { DocumentType } from '@/app/types/documents';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { supabase, getCurrentSession } from '@/app/lib/supabase';
+import { getSupabaseSession } from '@/app/lib/supabase/client';
 
 const MDEditor = dynamic(
   () => import('@uiw/react-md-editor').then((mod) => mod.default),
@@ -35,7 +35,7 @@ export default function DocumentForm({ initialData }: DocumentFormProps) {
 
   useEffect(() => {
     // Get initial session
-    getCurrentSession().then(session => {
+    getSupabaseSession().then(session => {
       if (!session) {
         router.push('/login');
         return;

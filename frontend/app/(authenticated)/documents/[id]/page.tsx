@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentSession } from '@/app/lib/supabase';
+import { getSupabaseSession } from '@/app/lib/supabase/client';
 import dynamic from 'next/dynamic';
 import '@/app/styles/markdown.css';
 
@@ -112,7 +112,7 @@ export default function DocumentViewPage({ params }: { params: { id: string } })
 
   useEffect(() => {
     const initSession = async () => {
-      const currentSession = await getCurrentSession();
+      const currentSession = await getSupabaseSession();
       if (!currentSession) {
         router.push('/login');
         return;
