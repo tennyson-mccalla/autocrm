@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RAGService } from '@/app/lib/rag/services/ragService';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { Database } from '@/lib/database.types';
 
 /**
  * RAG API Route Handler
@@ -13,13 +14,7 @@ import { cookies } from 'next/headers';
 
 // Helper to check if user has required permissions
 async function checkPermissions(userId: string) {
-  const supabase = createRouteHandlerClient({
-    cookies,
-    options: {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    }
-  });
+  const supabase = createRouteHandlerClient<Database>({ cookies });
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error || !user) {
@@ -35,13 +30,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Get the session
-    const supabase = createRouteHandlerClient({
-      cookies,
-      options: {
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      }
-    });
+    const supabase = createRouteHandlerClient<Database>({ cookies });
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError) {
