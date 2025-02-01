@@ -1,28 +1,19 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import type { Database } from '../types/supabase';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
-// Create a single instance of the Supabase client for client components
-export const supabase = createClientComponentClient<Database>({
-  cookieOptions: {
-    name: 'sb-localhost-auth-token',
-    path: '/',
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+export async function getSupabaseClient() {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return createRouteHandlerClient({ cookies });
   }
-});
-
-// Helper function to get the current session
-export async function getCurrentSession() {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error('Error getting session:', error);
-    return null;
-  }
-  return session;
+  throw new Error('Supabase environment variables are not set');
 }
 
-// Helper function to get the current user
-export async function getCurrentUser() {
-  const session = await getCurrentSession();
-  return session?.user || null;
+export async function getSupabaseSession() {
+  const supabase = await getSupabaseClient();
+  return supabase.auth.getSession();
+}
+
+export async function getSupabaseUser() {
+  const supabase = await getSupabaseClient();
+  return supabase.auth.getUser();
 }

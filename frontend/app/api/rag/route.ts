@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RAGService } from '@/app/lib/rag/services/ragService';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { getSupabaseUser, getSupabaseSession } from '@/app/lib/supabase';
 
 /**
  * RAG API Route Handler
@@ -13,14 +12,8 @@ import { cookies } from 'next/headers';
 
 // Helper to check if user has required permissions
 async function checkPermissions(userId: string) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.error('Missing required environment variables');
-    return false;
-  }
-
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user }, error } = await getSupabaseUser();
 
     if (error || !user) {
       console.error('Error getting user:', error);
@@ -37,15 +30,9 @@ async function checkPermissions(userId: string) {
 export async function POST(request: NextRequest) {
   console.log('RAG API: Received request');
 
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.error('RAG API: Missing required environment variables');
-    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-  }
-
   try {
     // Get the session
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await getSupabaseSession();
 
     if (sessionError) {
       console.error('RAG API: Session error:', sessionError);
