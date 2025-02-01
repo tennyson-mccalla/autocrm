@@ -1,18 +1,22 @@
 #!/bin/sh
 
+set -x  # Enable debug mode to print commands as they are executed
+
 # Function to check for potential secrets using TruffleHog
 check_trufflehog() {
     echo "🔍 Running TruffleHog scan..."
     if command -v trufflehog > /dev/null 2>&1; then
         if trufflehog git file://. --since-commit HEAD --only-verified --fail; then
             echo "✅ TruffleHog scan passed"
+            return 0
         else
             echo "❌ TruffleHog found potential secrets in your changes"
             echo "Please remove any sensitive information before pushing"
-            exit 1
+            return 1
         fi
     else
         echo "⚠️  Warning: TruffleHog not found. Install with: pip install trufflehog"
+        return 0
     fi
 }
 
@@ -39,15 +43,18 @@ check_secrets() {
     EXCLUDES="package-lock.json\|yarn.lock\|.husky/\|.git/\|.test.ts\|.test.js\|.example"
 
     for pattern in "${PATTERNS[@]}"; do
+        echo "Checking pattern: $pattern"
         FOUND=$(git diff --cached --name-only | grep -v -E "$EXCLUDES" | xargs grep -l "$pattern" 2>/dev/null)
         if [ -n "$FOUND" ]; then
             echo "❌ Potential secret or sensitive data found in:"
             echo "$FOUND"
             echo "Pattern matched: $pattern"
             echo "Please remove secrets and use environment variables instead."
-            exit 1
+            return 1
         fi
     done
+    echo "✅ No secrets found"
+    return 0
 }
 
 # Function to check for unencrypted .env files
@@ -60,8 +67,10 @@ check_env_files() {
         echo "❌ New .env file detected in commit:"
         echo "$ENV_FILES"
         echo "Please remove .env files and add them to .gitignore"
-        exit 1
+        return 1
     fi
+    echo "✅ No .env files found"
+    return 0
 }
 
 # Function to run build check
@@ -70,17 +79,19 @@ run_build_check() {
 
     # Store current directory
     CURRENT_DIR=$(pwd)
+    echo "Current directory: $CURRENT_DIR"
 
     # Check if frontend directory exists and contains package.json
     if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
-        cd frontend || exit 1
+        cd frontend || return 1
+        echo "Changed to frontend directory: $(pwd)"
         if NODE_OPTIONS='--no-deprecation' npm run build; then
             echo "✅ Build successful!"
-            cd "$CURRENT_DIR" || exit 1
+            cd "$CURRENT_DIR" || return 1
             return 0
         else
             echo "❌ Build failed"
-            cd "$CURRENT_DIR" || exit 1
+            cd "$CURRENT_DIR" || return 1
             return 1
         fi
     else
@@ -91,11 +102,11 @@ run_build_check() {
 
 # Run all security checks
 echo "🔒 Running security checks before push..."
-check_trufflehog
-check_secrets
-check_env_files
+check_trufflehog || { echo "TruffleHog check failed"; exit 1; }
+check_secrets || { echo "Secrets check failed"; exit 1; }
+check_env_files || { echo "Env files check failed"; exit 1; }
 
 # Run build check
-run_build_check || exit 1
+run_build_check || { echo "Build check failed"; exit 1; }
 
 echo "✅ All checks passed! Proceeding with push..."
