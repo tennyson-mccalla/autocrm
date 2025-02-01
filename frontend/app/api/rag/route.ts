@@ -3,6 +3,14 @@ import { RAGService } from '@/app/lib/rag/services/ragService';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
+/**
+ * RAG API Route Handler
+ * Required environment variables:
+ * - NEXT_PUBLIC_SUPABASE_URL: The URL of your Supabase project
+ * - NEXT_PUBLIC_SUPABASE_ANON_KEY: The anon/public key of your Supabase project
+ * - SUPABASE_SERVICE_ROLE_KEY: The service role key for admin operations
+ */
+
 // Helper to check if user has required permissions
 async function checkPermissions(userId: string) {
   const supabase = createRouteHandlerClient({ cookies });
