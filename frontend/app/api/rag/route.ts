@@ -13,15 +13,20 @@ import { cookies } from 'next/headers';
 
 // Helper to check if user has required permissions
 async function checkPermissions(userId: string) {
-  const supabase = createRouteHandlerClient({ cookies });
-  const { data: { user }, error } = await supabase.auth.getUser();
+  try {
+    const supabase = createRouteHandlerClient({ cookies });
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    console.error('Error getting user:', error);
+    if (error || !user) {
+      console.error('Error getting user:', error);
+      return false;
+    }
+
+    return user.user_metadata?.role === 'admin';
+  } catch (error) {
+    console.error('Error checking permissions:', error);
     return false;
   }
-
-  return user.user_metadata?.role === 'admin';
 }
 
 export async function POST(request: NextRequest) {
