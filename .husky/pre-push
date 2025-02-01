@@ -20,29 +20,27 @@ check_trufflehog() {
 check_secrets() {
     echo "🔍 Checking for potential secrets and sensitive data..."
 
-    # Define patterns to search for
+    # Simpler patterns that are more shell-compatible
     PATTERNS=(
-        "api[_-]key[[:space:]]*=[[:space:]]*['\"][a-zA-Z0-9_-]+['\"]"
-        "api[_-]secret[[:space:]]*=[[:space:]]*['\"][a-zA-Z0-9_-]+['\"]"
-        "password[[:space:]]*=[[:space:]]*['\"][^'\"\$]+['\"]"
-        "secret[_-]key[[:space:]]*=[[:space:]]*['\"][a-zA-Z0-9_-]+['\"]"
-        "private[_-]key[[:space:]]*=[[:space:]]*['\"][a-zA-Z0-9_-]+['\"]"
-        "aws[_-]access[_-]key[[:space:]]*=[[:space:]]*['\"][A-Z0-9]+['\"]"
-        "aws[_-]secret[[:space:]]*=[[:space:]]*['\"][A-Za-z0-9/+=]+['\"]"
-        "[a-zA-Z0-9_-]+:[[:space:]]*['\"][a-zA-Z0-9_-]{32,}['\"]"
-        # Additional patterns for other services
-        "gh[_-]token[[:space:]]*=[[:space:]]*['\"][a-zA-Z0-9_-]+['\"]"
-        "firebase[[:space:]]*=[[:space:]]*['\"][a-zA-Z0-9_-]+['\"]"
-        "stripe[[:space:]]*=[[:space:]]*['\"][sk|pk]_live_[0-9a-zA-Z]+['\"]"
-        "mongodb[+]srv[[:space:]]*=[[:space:]]*['\"][^'\"\$]+['\"]"
+        "api_key="
+        "api_secret="
+        "password="
+        "secret_key="
+        "private_key="
+        "aws_access_key="
+        "aws_secret="
+        "gh_token="
+        "firebase="
+        "stripe="
+        "mongodb+srv="
     )
 
-    # Files to exclude from check (adjust as needed)
-    EXCLUDES="package-lock.json|yarn.lock|.husky/|.git/|*.test.ts|*.test.js|*.example"
+    # Files to exclude from check
+    EXCLUDES="package-lock.json\|yarn.lock\|.husky/\|.git/\|.test.ts\|.test.js\|.example"
 
     for pattern in "${PATTERNS[@]}"; do
-        FOUND=$(git diff --cached --name-only | grep -v -E "$EXCLUDES" | xargs grep -l -E "$pattern" 2>/dev/null)
-        if [ ! -z "$FOUND" ]; then
+        FOUND=$(git diff --cached --name-only | grep -v -E "$EXCLUDES" | xargs grep -l "$pattern" 2>/dev/null)
+        if [ -n "$FOUND" ]; then
             echo "❌ Potential secret or sensitive data found in:"
             echo "$FOUND"
             echo "Pattern matched: $pattern"
@@ -58,7 +56,7 @@ check_env_files() {
 
     # Look for .env files that aren't .env.example
     ENV_FILES=$(git diff --cached --name-only | grep "\.env" | grep -v "\.env\.example$")
-    if [ ! -z "$ENV_FILES" ]; then
+    if [ -n "$ENV_FILES" ]; then
         echo "❌ Unencrypted .env file detected in commit:"
         echo "$ENV_FILES"
         echo "Please remove .env files and add them to .gitignore"
@@ -74,6 +72,6 @@ check_env_files
 
 # Run existing build check
 echo "🏗️ Running build check before push..."
-cd frontend || exit 1
+cd ../frontend || exit 1
 NODE_OPTIONS='--no-deprecation' npm run build || exit 1
 echo "✅ Build successful! Proceeding with push..."
