@@ -64,14 +64,38 @@ check_env_files() {
     fi
 }
 
+# Function to run build check
+run_build_check() {
+    echo "🏗️ Running build check before push..."
+
+    # Store current directory
+    CURRENT_DIR=$(pwd)
+
+    # Check if frontend directory exists and contains package.json
+    if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+        cd frontend || exit 1
+        if NODE_OPTIONS='--no-deprecation' npm run build; then
+            echo "✅ Build successful!"
+            cd "$CURRENT_DIR" || exit 1
+            return 0
+        else
+            echo "❌ Build failed"
+            cd "$CURRENT_DIR" || exit 1
+            return 1
+        fi
+    else
+        echo "⚠️ No frontend build needed"
+        return 0
+    fi
+}
+
 # Run all security checks
 echo "🔒 Running security checks before push..."
 check_trufflehog
 check_secrets
 check_env_files
 
-# Run existing build check
-echo "🏗️ Running build check before push..."
-cd frontend || exit 1
-NODE_OPTIONS='--no-deprecation' npm run build || exit 1
-echo "✅ Build successful! Proceeding with push..."
+# Run build check
+run_build_check || exit 1
+
+echo "✅ All checks passed! Proceeding with push..."
