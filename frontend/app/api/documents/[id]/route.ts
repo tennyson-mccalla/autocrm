@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies, headers } from 'next/headers';
-import { Database } from '@/types/supabase';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { Database } from '@/app/types/supabase';
 
 export async function GET(
   request: NextRequest,
@@ -54,14 +55,14 @@ export async function GET(
       .eq('id', params.id);
 
     if (countError) {
-      console.error('Error checking document existence:', countError);
+      console.error('Error checking document:', countError);
       return NextResponse.json(
-        { error: 'Failed to check document existence' },
+        { error: 'Failed to check document' },
         { status: 500 }
       );
     }
 
-    if (count === 0) {
+    if (!count || count === 0) {
       console.log('Document not found');
       return NextResponse.json(
         { error: 'Document not found' },

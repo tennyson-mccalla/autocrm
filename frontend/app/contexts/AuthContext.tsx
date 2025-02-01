@@ -1,9 +1,9 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, AuthError } from '@supabase/supabase-js';
+import { User, Session, AuthChangeEvent, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { signInUser } from '../lib/auth';
+import { useRouter } from 'next/navigation';
 
 // Development-only logging helper
 const logAuthEvent = (message: string, error?: AuthError) => {
@@ -16,176 +16,126 @@ const logAuthEvent = (message: string, error?: AuthError) => {
   }
 };
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
-  isLoading: boolean;
+  loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-}
+  isAdmin: boolean;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Provide default values for server-side rendering
+  if (typeof window === 'undefined') {
+    return (
+      <AuthContext.Provider
+        value={{
+          user: null,
+          loading: true,
+          signIn: async () => {},
+          signOut: async () => {},
+          resetPassword: async () => {},
+          isAdmin: false,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
+  return <AuthProviderClient>{children}</AuthProviderClient>;
+}
+
+function AuthProviderClient({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
+  const [isSubscribed, setIsSubscribed] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    setIsSubscribed(true);
 
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (!mounted) return;
-
-      if (error) {
-        logAuthEvent('Failed to get initial session', error);
-        setIsLoading(false);
-        return;
-      }
-
-      if (session) {
-        logAuthEvent(`Initial session found for user: ${session.user.email}`);
-        logAuthEvent(`Initial metadata: ${JSON.stringify(session.user.user_metadata)}`);
-
-        // Check if user is admin and update metadata if needed
-        if (!session.user.user_metadata?.role) {
-          const { data: isAdminData } = await supabase.rpc('is_admin', { user_id: session.user.id });
-          if (isAdminData && mounted) {
-            const { data: userData, error: updateError } = await supabase.auth.updateUser({
-              data: { role: 'admin' }
-            });
-
-            if (updateError) {
-              logAuthEvent('Failed to update user role metadata', updateError);
-            } else {
-              logAuthEvent('Successfully updated user role metadata to admin');
-              logAuthEvent(`Updated metadata: ${JSON.stringify(userData.user.user_metadata)}`);
-              setUser(userData.user);
-              setIsLoading(false);
-              return;
-            }
-          }
+    // Check active sessions and sets the user
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+      if (isSubscribed) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user) {
+          checkIfAdmin(session.user);
         }
-
-        if (mounted) {
-          setUser(session.user);
-        }
-      } else {
-        logAuthEvent('No initial session found');
-        if (mounted) {
-          setUser(null);
-        }
-      }
-
-      if (mounted) {
-        setIsLoading(false);
       }
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      logAuthEvent(`Auth state changed: ${event}`);
-      logAuthEvent(`Session metadata: ${JSON.stringify(session?.user?.user_metadata)}`);
-
-      if (!mounted) return;
-
-      // Only update user if there's an actual change
-      if (session) {
-        setIsLoading(true);
-
-        // For sign in and user updates, check admin status
-        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          // Check if user is admin and update metadata if needed
-          if (!session.user.user_metadata?.role) {
-            const { data: isAdminData } = await supabase.rpc('is_admin', { user_id: session.user.id });
-            if (isAdminData && mounted) {
-              const { data: userData, error: updateError } = await supabase.auth.updateUser({
-                data: { role: 'admin' }
-              });
-
-              if (updateError) {
-                logAuthEvent('Failed to update user role metadata', updateError);
-              } else {
-                logAuthEvent('Successfully updated user role metadata to admin');
-                logAuthEvent(`Updated metadata: ${JSON.stringify(userData.user.user_metadata)}`);
-                setUser(userData.user);
-                setIsLoading(false);
-                return;
-              }
-            }
-          }
+    // Listen for changes on auth state (sign in, sign out, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (isSubscribed) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user) {
+          checkIfAdmin(session.user);
         }
-
-        if (mounted) {
-          setUser(prev => {
-            if (!prev || prev.id !== session.user.id || JSON.stringify(prev.user_metadata) !== JSON.stringify(session.user.user_metadata)) {
-              logAuthEvent(`User session updated: ${session.user.email}`);
-              logAuthEvent(`User metadata: ${JSON.stringify(session.user.user_metadata)}`);
-              return session.user;
-            }
-            return prev;
-          });
-        }
-      } else if (session === null && mounted) {
-        logAuthEvent('User session ended');
-        setUser(null);
-      }
-
-      if (mounted) {
-        setIsLoading(false);
       }
     });
 
     return () => {
-      mounted = false;
-      logAuthEvent('Cleaning up auth subscriptions');
+      setIsSubscribed(false);
       subscription.unsubscribe();
     };
   }, []);
 
+  const checkIfAdmin = async (user: User) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (isSubscribed && data) {
+      setIsAdmin(data.role === 'admin');
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
-    const { user, error } = await signInUser(email, password);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
-      logAuthEvent('Sign in failed in context', error);
       throw error;
     }
-
-    if (!user) {
-      const err = new Error('No session established after sign in');
-      logAuthEvent('Sign in failed: no session established', err as AuthError);
-      throw err;
-    }
-
-    logAuthEvent(`Sign in successful for: ${email}`);
-    logAuthEvent(`User role: ${user.user_metadata?.role}`);
-    setUser(user);
   };
 
   const signOut = async () => {
-    logAuthEvent('Sign out requested');
     const { error } = await supabase.auth.signOut();
     if (error) {
-      logAuthEvent('Sign out failed', error);
       throw error;
     }
-    logAuthEvent('Sign out successful');
-    setUser(null);
+    router.push('/login');
   };
 
   const resetPassword = async (email: string) => {
-    logAuthEvent(`Password reset requested for: ${email}`);
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
-      logAuthEvent('Password reset request failed', error);
       throw error;
     }
-    logAuthEvent('Password reset email sent successfully');
+  };
+
+  const value = {
+    user,
+    loading,
+    signIn,
+    signOut,
+    resetPassword,
+    isAdmin,
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signOut, resetPassword }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

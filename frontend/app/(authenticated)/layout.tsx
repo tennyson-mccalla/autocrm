@@ -3,23 +3,25 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Sidebar } from '../components/Sidebar';
+import { Header } from '../components/Header';
 
 export default function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace('/login');
+    if (!loading && !user) {
+      router.push('/login');
     }
-  }, [user, router, isLoading]);
+  }, [user, loading, router]);
 
   // Show loading state while checking auth
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
@@ -34,8 +36,14 @@ export default function AuthenticatedLayout({
 
   // Only render children if authenticated
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
-      {children}
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto bg-background p-4">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

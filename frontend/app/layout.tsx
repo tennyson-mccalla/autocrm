@@ -2,7 +2,7 @@ import './globals.css';
 import { Providers } from './components/Providers';
 import { Header } from './components/Header';
 import { Inter } from 'next/font/google';
-import { ThemeWrapper } from './components/ThemeWrapper';
+import { ThemeProvider } from 'next-themes';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -12,18 +12,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="h-full">
-      <body className={`h-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 ${inter.className}`} suppressHydrationWarning>
-        <ThemeWrapper>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <Providers>
-            <div className="min-h-full flex flex-col">
+            <div className="min-h-full flex flex-col bg-background text-foreground">
               <Header />
-              <main className="flex-1 bg-gray-50 dark:bg-gray-900">
+              <main className="flex-1">
                 {children}
               </main>
             </div>
           </Providers>
-        </ThemeWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

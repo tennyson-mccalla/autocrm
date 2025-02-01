@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DocumentType } from '@/types/documents';
+import { DocumentType } from '@/app/types/documents';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase, getCurrentSession } from '@/app/lib/supabase';
