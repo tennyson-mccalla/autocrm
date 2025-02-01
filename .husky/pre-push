@@ -72,6 +72,6 @@ check_env_files
 
 # Run existing build check
 echo "🏗️ Running build check before push..."
-cd ../frontend || exit 1
+cd frontend || exit 1
 NODE_OPTIONS='--no-deprecation' npm run build || exit 1
 echo "✅ Build successful! Proceeding with push..."
