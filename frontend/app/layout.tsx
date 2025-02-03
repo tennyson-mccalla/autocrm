@@ -2,11 +2,13 @@ import './globals.css';
 import { Providers } from './components/Providers';
 import { Header } from './components/Header';
 import { Inter } from 'next/font/google';
-import { ThemeProvider } from './components/theme-provider';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { AuthProvider } from './contexts/AuthContext';
 import { SupabaseProvider } from './components/SupabaseProvider';
 
 const inter = Inter({ subsets: ['latin'] });
+
+const ThemeProvider = NextThemesProvider as any;
 
 export default function RootLayout({
   children,
@@ -16,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
+        {/* @ts-ignore */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
