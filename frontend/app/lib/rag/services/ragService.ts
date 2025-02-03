@@ -211,7 +211,7 @@ export class RAGService {
       .map(chunk => chunk.content)
       .join('\n\n');
 
-    const prompt = `Based on the following context, please answer the question. If you cannot answer the question based solely on the context provided, say so.
+    const prompt = `Based on the following context, please answer the question. Provide your answer along with citations. After your answer, include a 'Citations:' section listing source identifiers (e.g., document IDs or chunk numbers) for the referenced information. If you cannot answer based solely on the context, simply state that.
 
 Context:
 ${context}

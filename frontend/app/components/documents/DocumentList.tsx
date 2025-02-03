@@ -27,7 +27,7 @@ export default function DocumentList() {
 
   useEffect(() => {
     // Get initial session
-    getSupabaseSession().then(session => {
+    getSupabaseSession().then(({ data: { session } }) => {
       setSession(session);
     });
   }, []);
@@ -41,7 +41,7 @@ export default function DocumentList() {
 
         const response = await fetch(`/api/documents?type=${filter}&sort=${sortBy}`, {
           headers: {
-            'Authorization': `Bearer ${session.access_token}`
+            'Authorization': `Bearer ${session?.access_token}`
           }
         });
 

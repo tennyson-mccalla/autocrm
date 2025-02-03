@@ -4,6 +4,7 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Moon, Sun, LogOut } from 'lucide-react';
 
 function HeaderContent() {
   const { theme, setTheme } = useTheme();
@@ -42,29 +43,25 @@ function HeaderContent() {
               <Link href="/documents" className="hover:text-primary">
                 Documents
               </Link>
-              <Link href="/chat" className="hover:text-primary">
-                Chat
+              <Link href="/queues" className="hover:text-primary">
+                Queues
               </Link>
-              {isAdmin && (
-                <Link href="/admin/knowledge-base" className="hover:text-primary">
-                  Knowledge Base
-                </Link>
-              )}
             </>
           )}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-muted"
+            className="p-2 rounded-lg hover:bg-muted text-foreground"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? '🌙' : '☀️'}
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           {user && (
             <button
               onClick={signOut}
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+              className="p-2 rounded-lg hover:bg-muted text-foreground"
+              aria-label="Sign out"
             >
-              Sign Out
+              <LogOut size={20} />
             </button>
           )}
         </div>

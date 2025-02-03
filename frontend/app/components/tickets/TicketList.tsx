@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { listTickets } from '../../lib/tickets';
@@ -16,12 +16,14 @@ export function TicketList() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  async function fetchTickets() {
+  const fetchTickets = useCallback(async (showLoading = false) => {
     try {
       if (!user) {
         setError('Please sign in to view tickets');
         return;
       }
+
+      if (showLoading) setLoading(true);
 
       const { data, error: ticketError } = await listTickets();
 
@@ -40,23 +42,24 @@ export function TicketList() {
     } catch (err) {
       setError('Error loading tickets');
       console.error('Error loading tickets:', err);
+    } finally {
+      if (showLoading) setLoading(false);
     }
-  }
+  }, [user, tickets]);
 
   // Initial load with loading state
   useEffect(() => {
-    setLoading(true);
-    fetchTickets().finally(() => setLoading(false));
-  }, [user]);
+    fetchTickets(true);
+  }, [fetchTickets]);
 
   // Polling with no loading state
   useEffect(() => {
     const interval = setInterval(() => {
-      if (user) fetchTickets();
-    }, 10000); // Reduced to 10 seconds for better responsiveness
+      if (user) fetchTickets(false);
+    }, 30000); // Increased to 30 seconds to reduce unnecessary updates
 
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchTickets, user]);
 
   const handleTicketClick = (ticketId: string) => {
     router.push(`/tickets/${ticketId}`);

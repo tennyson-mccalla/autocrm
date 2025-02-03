@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Ticket } from '@/app/lib/tickets';
 import { getQueueTickets, Queue, createQueue, getQueues, getTicketsInQueue } from '@/app/lib/queues';
 
 export default function QueuesPage() {
+  const router = useRouter();
   const [queues, setQueues] = useState<Queue[]>([]);
   const [selectedQueue, setSelectedQueue] = useState<Queue | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -176,7 +178,7 @@ export default function QueuesPage() {
                   <div
                     key={ticket.id}
                     className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                    onClick={() => window.location.href = `/tickets/${ticket.id}`}
+                    onClick={() => router.push(`/tickets/${ticket.id}`)}
                   >
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-gray-900 dark:text-gray-100">{ticket.title}</h3>

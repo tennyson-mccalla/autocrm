@@ -112,7 +112,7 @@ export default function DocumentViewPage({ params }: { params: { id: string } })
 
   useEffect(() => {
     const initSession = async () => {
-      const currentSession = await getSupabaseSession();
+      const { data: { session: currentSession } } = await getSupabaseSession();
       if (!currentSession) {
         router.push('/login');
         return;
@@ -136,17 +136,16 @@ export default function DocumentViewPage({ params }: { params: { id: string } })
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
-          },
-          credentials: 'include'
+          }
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
+          const data = await response.json();
           console.error('API error:', data);
           throw new Error(data.error || 'Failed to fetch document');
         }
 
+        const data = await response.json();
         console.log('Document fetched successfully');
         setDocument(data);
       } catch (err) {

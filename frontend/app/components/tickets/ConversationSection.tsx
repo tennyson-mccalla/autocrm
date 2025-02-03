@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { createSupabaseClient } from '../../lib/auth';
+import { getSupabaseClient } from '../../lib/supabase/client';
 import type { Conversation } from '../../types';
 import ResponseSuggestion from './ResponseSuggestion';
 import type { TicketContext } from '@/app/types/llm-responses';
@@ -21,7 +21,47 @@ export default function ConversationSection({ ticketId, ticket }: ConversationSe
   const { user } = useAuth();
 
   useEffect(() => {
+    let mounted = true;
+
+    async function loadMessages() {
+      if (!ticketId) return;
+
+      try {
+        const client = getSupabaseClient();
+        const { data, error } = await client
+          .from('conversations')
+          .select(`
+            *,
+            users (
+              full_name,
+              role
+            )
+          `)
+          .eq('ticket_id', ticketId)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        if (mounted) {
+          setMessages(data || []);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error loading messages:', err);
+        if (mounted) {
+          setError('Failed to load messages');
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
     loadMessages();
+
+    return () => {
+      mounted = false;
+    };
   }, [ticketId]);
 
   const logSuggestion = async (data: any) => {
@@ -53,37 +93,12 @@ export default function ConversationSection({ ticketId, ticket }: ConversationSe
     }
   };
 
-  async function loadMessages() {
-    try {
-      const client = createSupabaseClient();
-      const { data, error } = await client
-        .from('conversations')
-        .select(`
-          *,
-          users (
-            full_name,
-            role
-          )
-        `)
-        .eq('ticket_id', ticketId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setMessages(data || []);
-    } catch (err) {
-      console.error('Error loading messages:', err);
-      setError('Failed to load messages');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleSendMessage(e: React.FormEvent) {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
 
     try {
-      const client = createSupabaseClient();
+      const client = getSupabaseClient();
 
       // If this message was based on a suggestion, log any modifications
       if (lastSuggestion) {
@@ -111,12 +126,27 @@ export default function ConversationSection({ ticketId, ticket }: ConversationSe
       setNewMessage('');
       setLastSuggestion(null);
       setLastSuggestionMetadata(null);
-      loadMessages();
+
+      // Reload messages
+      const { data: newMessages, error: loadError } = await client
+        .from('conversations')
+        .select(`
+          *,
+          users (
+            full_name,
+            role
+          )
+        `)
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+
+      if (loadError) throw loadError;
+      setMessages(newMessages || []);
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
     }
-  }
+  };
 
   const handleSuggestionSelect = (suggestion: string) => {
     setNewMessage(suggestion);

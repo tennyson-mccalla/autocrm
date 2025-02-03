@@ -1,7 +1,6 @@
 import { getSupabaseClient } from './supabase/client';
 import { SupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '../types/supabase';
-import { createSupabaseClient } from './auth';
 
 export type TicketPriority = 'low' | 'medium' | 'high'
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
@@ -53,7 +52,7 @@ export interface PaginatedResponse<T> {
 export type TicketInput = Pick<Ticket, 'title' | 'description' | 'priority'>;
 
 export async function createTicket(ticket: TicketInput): Promise<{ data: Ticket | null; error: { message: string } | null }> {
-  const client = createSupabaseClient();
+  const client = getSupabaseClient();
   const { data: { session }, error: sessionError } = await client.auth.getSession();
 
   if (sessionError || !session) {
@@ -78,87 +77,53 @@ export async function createTicket(ticket: TicketInput): Promise<{ data: Ticket 
 }
 
 export async function listTickets() {
-  const client = createSupabaseClient();
-  const { data: { session }, error: sessionError } = await client.auth.getSession();
+  const client = getSupabaseClient();
+  let conversations: Conversation[] = [];
+  let queueAssignments: QueueAssignment[] = [];
 
-  if (sessionError || !session) {
-    return { error: { message: 'Not authenticated' } };
-  }
-
-  const userRole = session.user.user_metadata.role;
-
-  // First, get the tickets with basic info
-  let query = client
+  // Fetch tickets with user info
+  const { data: tickets, error } = await client
     .from('tickets')
     .select(`
       *,
-      assigned_to_user:users!tickets_assigned_to_fkey (
-        full_name
-      )
-    `);
+      created_by_user:users!tickets_created_by_fkey(full_name, email),
+      assigned_to_user:users!tickets_assigned_to_fkey(full_name, email)
+    `)
+    .order('created_at', { ascending: false });
 
-  if (userRole === 'customer') {
-    query = query.eq('created_by', session.user.id);
+  if (error) {
+    console.error('Error fetching tickets:', error);
+    return { error };
   }
 
-  const { data: tickets, error: ticketsError } = await query.order('created_at', { ascending: false });
+  // Fetch queue assignments for all users
+  try {
+    const { data: qa, error: qaError } = await client
+      .from('queue_assignments')
+      .select(`
+        queue_id,
+        ticket_id,
+        queues (
+          id,
+          name,
+          description
+        )
+      `);
 
-  if (ticketsError) {
-    return { error: { message: ticketsError.message } };
-  }
-
-  interface QueueAssignment {
-    ticket_id: string;
-    queue_id: string;
-    queues: {
-      id: string;
-      name: string;
-    }[];
-  }
-
-  interface Conversation {
-    ticket_id: string;
-    count: number;
-  }
-
-  let queueAssignments: QueueAssignment[] = [];
-  let conversations: Conversation[] = [];
-
-  // Only fetch queue assignments for workers and admins
-  if (userRole === 'worker' || userRole === 'admin') {
-    try {
-      // Try to get queue assignments separately
-      const { data: qa, error: queueError } = await client
-        .from('queue_assignments')
-        .select(`
-          ticket_id,
-          queue_id,
-          queues (
-            id,
-            name
-          )
-        `);
-
-      if (!queueError && qa) {
-        queueAssignments = qa as QueueAssignment[];
-      }
-    } catch (error) {
-      console.debug('Queue assignments not available:', error);
+    if (!qaError && qa) {
+      queueAssignments = qa;
     }
+  } catch (error) {
+    console.error('Queue assignments error:', error);
   }
 
   // Fetch conversation counts for all users
   try {
-    // Try to get conversations count per ticket
     const { data: conv, error: convoError } = await client
       .rpc('count_conversations_per_ticket');
 
-    console.log('Conversation counts:', conv);
-    console.log('Conversation error:', convoError);
-
     if (!convoError && conv) {
       conversations = conv as Conversation[];
-      console.log('Processed conversations:', conversations);
     }
   } catch (error) {
     console.error('Conversations error:', error);
@@ -180,7 +145,7 @@ export async function listTickets() {
 }
 
 export async function updateTicket(id: number, updates: Partial<Ticket>) {
-  const client = createSupabaseClient();
+  const client = getSupabaseClient();
   const { data: { session }, error: sessionError } = await client.auth.getSession();
 
   if (sessionError || !session) {
@@ -207,7 +172,7 @@ export async function updateTicket(id: number, updates: Partial<Ticket>) {
 }
 
 export async function getUnassignedTickets() {
-  const client = createSupabaseClient();
+  const client = getSupabaseClient();
   const { data: { session }, error: sessionError } = await client.auth.getSession();
 
   if (sessionError || !session) {
@@ -234,7 +199,7 @@ export async function getUnassignedTickets() {
 }
 
 export async function assignTicket(ticketId: string, assignedTo: string) {
-  const client = createSupabaseClient();
+  const client = getSupabaseClient();
   const { data, error } = await client
     .from('tickets')
     .update({ assigned_to: assignedTo })
@@ -249,7 +214,7 @@ export async function assignTicket(ticketId: string, assignedTo: string) {
 }
 
 export async function getWorkers() {
-  const client = createSupabaseClient();
+  const client = getSupabaseClient();
   const { data, error } = await client
     .from('users')
     .select('id, email, full_name')
@@ -262,31 +227,123 @@ export async function getWorkers() {
   return data;
 }
 
+interface QueueAssignment {
+  ticket_id: string;
+  queue_id: string;
+  queues?: {
+    id: string;
+    name: string;
+  }[];
+}
+
+interface Conversation {
+  ticket_id: string;
+  count: number;
+}
+
 export async function getTicket(id: string): Promise<Ticket | null> {
-  const client = createSupabaseClient();
+  const client = getSupabaseClient();
+  console.log('Getting session for ticket:', id);
   const { data: { session }, error: sessionError } = await client.auth.getSession();
 
   if (sessionError || !session) {
+    console.error('Session error:', sessionError);
     throw new Error('Not authenticated');
   }
 
-  const { data, error } = await client
+  const userRole = session.user.user_metadata.role;
+  console.log('User role:', userRole);
+
+  // Fetch ticket with basic info and assigned user
+  console.log('Fetching ticket data...');
+  const { data: ticket, error: ticketError } = await client
     .from('tickets')
-    .select('*')
+    .select(`
+      *,
+      assigned_to_user:users!tickets_assigned_to_fkey (
+        full_name
+      )
+    `)
     .eq('id', id)
     .single();
 
-  if (error) {
-    throw error;
+  if (ticketError) {
+    console.error('Error fetching ticket:', ticketError);
+    throw ticketError;
   }
 
-  return data;
+  if (!ticket) {
+    console.log('No ticket found with id:', id);
+    return null;
+  }
+
+  console.log('Basic ticket data retrieved:', ticket);
+
+  let queueAssignments: QueueAssignment[] = [];
+  let conversations: Conversation[] = [];
+
+  // Only fetch queue assignments for workers and admins
+  if (userRole === 'worker' || userRole === 'admin') {
+    try {
+      console.log('Fetching queue assignments...');
+      const { data: qa, error: queueError } = await client
+        .from('queue_assignments')
+        .select(`
+          ticket_id,
+          queue_id,
+          queues (
+            id,
+            name
+          )
+        `)
+        .eq('ticket_id', id);
+
+      if (!queueError && qa) {
+        queueAssignments = qa as QueueAssignment[];
+        console.log('Queue assignments retrieved:', queueAssignments);
+      } else if (queueError) {
+        console.error('Error fetching queue assignments:', queueError);
+      }
+    } catch (error) {
+      console.error('Queue assignments error:', error);
+    }
+  }
+
+  // Fetch conversation count
+  try {
+    console.log('Fetching conversation counts...');
+    const { data: conv, error: convoError } = await client
+      .rpc('count_conversations_per_ticket')
+      .eq('ticket_id', id);
+
+    if (!convoError && conv) {
+      conversations = conv as Conversation[];
+      console.log('Conversation counts retrieved:', conversations);
+    } else if (convoError) {
+      console.error('Error fetching conversation counts:', convoError);
+    }
+  } catch (error) {
+    console.error('Conversations error:', error);
+  }
+
+  // Combine the data
+  const enrichedTicket = {
+    ...ticket,
+    queue_assignments: queueAssignments.map(qa => ({
+      queue_id: qa.queue_id,
+      queues: qa.queues?.[0] || null
+    })) || [],
+    conversation_count: conversations.find((c: Conversation) => c.ticket_id === id)?.count || 0
+  };
+
+  console.log('Returning enriched ticket:', enrichedTicket);
+  return enrichedTicket;
 }
 
 export async function getUserTickets(
   page: number = 1,
   limit: number = 10,
-  client: ReturnType<typeof createSupabaseClient> = createSupabaseClient()
+  client: ReturnType<typeof getSupabaseClient> = getSupabaseClient()
 ): Promise<PaginatedResponse<Ticket>> {
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError) {
